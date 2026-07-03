@@ -1,17 +1,18 @@
 # Project Status
 
-**Current Phase:** Phase 0 (Foundation)
+**Current Phase:** Phase 1 (Design)
 
 ## Milestones Completed
-*   [x] Initial Monorepo Structure Setup
-*   [x] Dependency Management Tooling (pnpm, uv, Turborepo)
-*   [x] Foundational Documentation Drafted (ARCHITECTURE, ROADMAP, DECISIONS, etc.)
-*   [x] Tooling configured (Ruff, MyPy, ESLint, Prettier, Pytest, Vitest)
-*   [x] Core interface packages scaffolded (`kernel`, `interfaces`, `event_bus`, etc.)
-*   [x] CI/CD Github Actions Configured
+*   **[x] Phase 0: Foundation (v0.1.0-alpha)**
+    *   Initial Monorepo Structure Setup
+    *   Dependency Management Tooling (pnpm, uv, Turborepo)
+    *   Foundational Documentation Drafted (ARCHITECTURE, ROADMAP, DECISIONS, Architecture Diagrams)
+    *   Tooling configured (Ruff, MyPy, ESLint, Prettier, Pytest, Vitest)
+    *   Core interface packages scaffolded (`kernel`, `interfaces`, `event_bus`, etc.)
+    *   CI/CD Github Actions Configured
 
 ## Active Work
-Completing Phase 0 initial build verifications.
+Drafting the detailed Phase 1 Architecture Proposal for the Chhaya Kernel.
 
 ## Next Up
-Phase 1: Implementing the core Chhaya Kernel execution loop and local LLM integrations.
+Phase 1 Implementation: Building the core Chhaya Kernel execution loop and local LLM integrations.
