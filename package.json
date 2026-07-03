@@ -1,0 +1,26 @@
+{
+  "name": "chhaya-agent-factory",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Chhaya Agent Factory - Modular, open-source AI Operating System",
+  "scripts": {
+    "build": "tsc --noEmit || true",
+    "dev": "turbo run dev",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.1.0",
+    "eslint": "latest",
+    "prettier": "latest",
+    "turbo": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "^8.62.1",
+    "vitest": "latest"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
