@@ -53,7 +53,7 @@ wheels = [
 [[package]]
 name = "api"
 version = "0.0.0"
-source = { virtual = "services/api" }
+source = { editable = "services/api" }
 
 [[package]]
 name = "ast-serialize"
@@ -151,7 +151,7 @@ wheels = [
 [[package]]
 name = "config"
 version = "0.0.0"
-source = { virtual = "packages/config" }
+source = { editable = "packages/config" }
 
 [[package]]
 name = "coverage"
@@ -245,7 +245,7 @@ toml = [
 [[package]]
 name = "event-bus"
 version = "0.0.0"
-source = { virtual = "packages/event_bus" }
+source = { editable = "packages/event_bus" }
 
 [[package]]
 name = "fastapi"
@@ -293,12 +293,12 @@ wheels = [
 [[package]]
 name = "interfaces"
 version = "0.0.0"
-source = { virtual = "packages/interfaces" }
+source = { editable = "packages/interfaces" }
 
 [[package]]
 name = "kernel"
 version = "0.0.0"
-source = { virtual = "packages/kernel" }
+source = { editable = "packages/kernel" }
 
 [[package]]
 name = "librt"
@@ -465,7 +465,7 @@ wheels = [
 [[package]]
 name = "plugin-sdk"
 version = "0.0.0"
-source = { virtual = "packages/plugin_sdk" }
+source = { editable = "packages/plugin_sdk" }
 
 [[package]]
 name = "pydantic"
@@ -664,7 +664,7 @@ wheels = [
 [[package]]
 name = "security"
 version = "0.0.0"
-source = { virtual = "packages/security" }
+source = { editable = "packages/security" }
 
 [[package]]
 name = "starlette"
@@ -682,7 +682,7 @@ wheels = [
 [[package]]
 name = "telemetry"
 version = "0.0.0"
-source = { virtual = "packages/telemetry" }
+source = { editable = "packages/telemetry" }
 
 [[package]]
 name = "tomli"
