@@ -35,7 +35,7 @@ select = ["E", "F", "I", "UP"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-v --cov=packages --cov=services --cov-report=term-missing"
+addopts = "-v  --cov-report=term-missing"
 
 [tool.mypy]
 python_version = "3.11"

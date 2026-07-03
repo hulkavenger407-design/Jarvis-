@@ -1,76 +1,75 @@
 # Phase 1: Chhaya Kernel Design Proposal
 
 ## 1. Executive Summary
-This document proposes the architecture for the Chhaya Kernel, the central orchestrator of the Chhaya Agent Factory. The Kernel is designed to manage agent lifecycles, route asynchronous events, load extensible plugins, and provide dependency injection for abstraction layers (LLMs, Memory, Tools).
+This document outlines the revised architecture for the Chhaya Kernel. Moving away from a simple message-router paradigm, the Chhaya Kernel is designed as a true Operating System for AI agents. It utilizes a strict Event-Driven Architecture to manage hardware resources, isolate processes (agents), handle security, and abstract hardware/services via a centralized registry.
 
-## 2. Kernel Responsibilities
-The Kernel's primary responsibilities are:
-1. **Bootstrapping**: Initializing telemetry, configuration, and security constraints.
-2. **Component Registry**: Managing dependency injection for providers (LLMs, Memory).
-3. **Plugin Management**: Loading and validating third-party extensions.
-4. **Event Routing**: Processing synchronous API calls and asynchronous system events.
-5. **Agent Orchestration**: Managing the lifecycle, memory constraints, and execution loops of running agents.
+## 2. Event-Driven Architecture
+The central nervous system of the Chhaya Kernel is the **Event Bus**.
+*   **Design**: Subsystems never invoke each other directly (e.g., the `Agent Manager` does not call `tool.execute()`). Instead, the `Agent Manager` publishes a `ToolExecutionRequestedEvent`. The relevant provider listens, executes the tool, and publishes a `ToolExecutionCompletedEvent`.
+*   **Advantage**: Extreme decoupling. This allows the `Resource Manager` to intercept events and pause the Event Bus if VRAM is exhausted, or the `Permission Manager` to cancel a `ToolExecutionRequestedEvent` before it reaches the provider.
 
----
+## 3. Kernel Subsystems (OS Managers)
 
-## 3. Architecture Deep Dive
+To achieve the OS metaphor, the Kernel is divided into 12 core managers:
 
-### 3.1 Internal Package Structure (`packages/kernel`)
-The Kernel will be internally modularized to ensure separation of concerns:
-*   `kernel/core.py`: The `ChhayaKernel` singleton/main class.
-*   `kernel/registry.py`: Dependency injection container.
-*   `kernel/loader.py`: The Plugin loader subsystem.
-*   `kernel/orchestrator.py`: Agent lifecycle manager.
-*   `kernel/scheduler.py`: Background task/event scheduler.
+### 3.1 Boot Manager
+*   **Responsibility**: The entry point. It loads environment variables, initializes the `Telemetry` system first to catch boot errors, and instantiates the `DI Container`.
 
-### 3.2 Agent Lifecycle Management
-Agents in Chhaya must be ephemeral due to the **4GB VRAM constraint**.
-*   **Design**: The `orchestrator` will manage agent "Sessions". When an agent yields (waits for a tool or user input), its context is serialized to the `MemoryProvider` and the LLM is flushed from VRAM.
-*   **Trade-off**: Memory swapping adds latency (loading/unloading models).
-*   **Alternative**: Keep models resident in VRAM. This is faster but limits the system to a single small model, violating the "multi-agent ecosystem" vision.
-*   **Recommendation**: Adopt the swapping/ephemeral state model.
+### 3.2 Lifecycle Manager
+*   **Responsibility**: Manages the overarching state machine of the Kernel (e.g., `INITIALIZING`, `RUNNING`, `PAUSED`, `SHUTTING_DOWN`). It orchestrates the order in which other managers come online.
 
-### 3.3 Event Bus Architecture
-The system will rely heavily on `packages/event_bus`.
-*   **Design**: A local, async Pub/Sub system (e.g., using `asyncio.Queue`).
-*   **Trade-off**: A local queue does not scale across multiple machines.
-*   **Alternative**: Use Redis or RabbitMQ.
-*   **Recommendation**: Use a native Python `asyncio` bus for Phase 1 to satisfy the "Local-First" and zero-setup constraint. The interface should be strict enough that a Redis adapter can be swapped in later without changing Agent code.
+### 3.3 Dependency Injection Container
+*   **Responsibility**: Constructs complex objects and their dependencies. It ensures that any manager that needs the `Event Bus` or `Telemetry` receives the correct singleton instance automatically.
 
-### 3.4 Provider Registry & Dependency Injection (DI)
-*   **Design**: The Kernel will initialize a DI container on boot. Providers (e.g., `OllamaProvider`, `SQLiteMemoryProvider`) will be instantiated and mapped to their respective Interfaces (`LLMProvider`, `MemoryProvider`).
-*   **Alternative**: Use a heavy third-party DI framework (e.g., `python-dependency-injector`).
-*   **Recommendation**: Implement a lightweight, native dict-based registry in `kernel/registry.py`. Third-party frameworks add unnecessary bloat and learning curves for open-source contributors.
+### 3.4 Resource Manager (CPU/RAM/GPU)
+*   **Responsibility**: A background daemon that polls system resources (specifically targeting the strict 4GB VRAM constraint).
+*   **Action**: If VRAM hits 90%, it publishes a `ResourceCriticalEvent`. The `Agent Manager` responds by suspending idle agents and flushing their context to disk.
 
-### 3.5 Plugin Loader
-*   **Design**: The Kernel scans a designated `plugins/` directory. It uses `importlib` to dynamically load Python modules that subclass `plugin_sdk.Plugin`.
-*   **Security**: Plugins run in the same process space.
-*   **Recommendation**: Accept in-process plugins for Phase 1. Future phases (Phase 5) will introduce sandboxed execution (e.g., WASM or separate Docker containers) for untrusted plugins.
+### 3.5 Agent Manager
+*   **Responsibility**: Analogous to an OS Process Manager. It spawns, tracks, suspends, and resumes Agent instances. It handles the "context switching" required when multiple agents must share the limited LLM VRAM.
 
-### 3.6 State Management & Scheduler
-*   **Design**: The Kernel state (active agents, loaded models) will be managed by a thread-safe `State` object. The `Scheduler` will be an `asyncio` task loop that monitors timeouts and triggers scheduled background agents.
+### 3.6 Plugin Manager
+*   **Responsibility**: Discovers and loads external code at runtime. It verifies plugin signatures/manifests against the `Plugin SDK` and mounts their provided hooks into the `Event Bus`.
 
-### 3.7 Permission Framework
-*   **Design**: Every Event and Tool Execution request will pass through `security.SecurityManager.verify_permission()`. For Phase 1, this will default to "Allow All" locally, but the hooks must be in place.
+### 3.7 Provider Registry
+*   **Responsibility**: The hardware/service abstraction layer. It maps abstract interfaces (e.g., `LLMProvider`, `MemoryProvider`, `VoiceProvider`) to their injected concrete implementations (e.g., `OllamaProvider`, `SQLiteMemoryProvider`). Agents only ever ask the Registry for an interface, never a specific brand.
 
-### 3.8 Logging & Configuration Integration
-*   **Design**: The Kernel's first boot step is initializing `packages/telemetry` (using structured JSON logging for API consumption and readable console logging for local dev) and `packages/config` (reading from `.env` and `os.environ`).
+### 3.8 Task Scheduler
+*   **Responsibility**: Analogous to `cron`. It manages delayed events, background polling (e.g., "check this inbox every 5 minutes"), and resuming suspended agents when their wait conditions are met.
 
-### 3.9 Testing Strategy
-*   **Design**: The Kernel must be 100% testable without loading real LLMs or databases.
-*   **Recommendation**:
-    1.  **Unit Tests (`pytest`)**: Use mock Providers injected into the registry to test `orchestrator` and `scheduler` logic.
-    2.  **Integration Tests**: Run the Kernel alongside a mock `FastAPI` instance to verify end-to-end event flowing through the `event_bus` without external IO.
-    3.  **Coverage**: Enforce a strict minimum test coverage (e.g., 90%) for the `packages/kernel` directory via `pytest-cov`.
+### 3.9 Session Manager
+*   **Responsibility**: Tracks client-facing context. It maps an incoming API request (or WebSocket connection) to the correct running Agent and its specific Short-Term Memory context.
+
+### 3.10 Permission Manager
+*   **Responsibility**: The security kernel. It listens to the `Event Bus` and intercepts sensitive events (like file system access or executing code). It verifies the request against the current Session's capabilities.
+
+### 3.11 Telemetry & Logging
+*   **Responsibility**: Structured observability. It captures all events flowing through the `Event Bus` to provide debugging traces, performance metrics (latency to LLM), and system health reports.
+
+### 3.12 Shutdown Manager
+*   **Responsibility**: Handles `SIGINT` / `SIGTERM` gracefully. It instructs the `Agent Manager` to serialize active states, closes database connections in the `Provider Registry`, and unloads models from the `Resource Manager` to prevent corrupted states.
 
 ---
 
-## 4. Required ADRs for Phase 1
-Before or during Phase 1 implementation, the following ADRs will be created in `docs/decisions/`:
-*   `0005-dependency-injection-strategy.md`
-*   `0006-async-event-bus-implementation.md`
-*   `0007-agent-memory-swapping.md`
-*   `0008-plugin-loading-mechanism.md`
+## 4. Alternative Designs & Trade-offs
 
-## 5. Conclusion
-This architecture guarantees that the Kernel acts as a true Operating System—managing resources (VRAM via the Orchestrator), handling IPC (Event Bus), and exposing hardware (Providers/Tools). It avoids locking into LangChain paradigms directly at the core.
+### 4.1 Event Bus Implementation
+*   **Alternative**: Use RabbitMQ or Kafka.
+*   **Trade-off**: Highly scalable for distributed systems but violates the "Local-First" and zero-configuration constraint.
+*   **Recommendation**: Implement a fast, in-memory asynchronous `asyncio` Event Bus for Phase 1. Design the interface so it can be swapped for Redis in a future distributed phase.
+
+### 4.2 Agent Concurrency vs. Swapping
+*   **Alternative**: Load multiple LLMs into VRAM simultaneously for true parallel agent execution.
+*   **Trade-off**: The target hardware (4GB VRAM) absolutely cannot support multiple modern LLMs simultaneously.
+*   **Recommendation**: The `Agent Manager` must implement a "Context Switching" pattern. Only one LLM is active in VRAM. When Agent B needs to think, Agent A's LLM context is unloaded, and B's is loaded. This trades speed for capability.
+
+## 5. Testing Strategy
+*   **Unit Testing**: The OS-manager design makes unit testing trivial. The `Agent Manager` can be tested in isolation by injecting a Mock `Event Bus` and asserting that it emits the correct `AgentSuspendedEvent` when a mock `ResourceCriticalEvent` is received.
+*   **Integration Testing**: Boot the entire Kernel with Mock Providers in the `Provider Registry` to ensure the `Lifecycle Manager` transitions states correctly without requiring real hardware monitoring.
+
+## 6. Required ADRs for Phase 1
+Before or during Phase 1 implementation, the following ADRs will be finalized in `docs/decisions/`:
+*   `0005-os-kernel-architecture.md` (Documenting the 12 managers)
+*   `0006-event-driven-bus.md`
+*   `0007-vram-context-switching.md` (Addressing the 4GB constraint)
+*   `0008-provider-registry-pattern.md`
