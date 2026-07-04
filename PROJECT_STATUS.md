@@ -1,6 +1,6 @@
 # Project Status
 
-**Current Phase:** Phase 1 (Design)
+**Current Phase:** Phase 1 (Implementation)
 
 ## Milestones Completed
 *   **[x] Phase 0: Foundation (v0.1.0-alpha)**
@@ -11,8 +11,19 @@
     *   Core interface packages scaffolded (`kernel`, `interfaces`, `event_bus`, etc.)
     *   CI/CD Github Actions Configured
 
+*   **[x] Phase 1 Design**
+    *   OS Kernel Architecture Proposal drafted and approved.
+    *   Development Standards (`chhaya-development-standard.md`) ratified.
+    *   Subsystem Specifications (Kernel Events, Plugin API, Provider Interfaces, Agent Lifecycle) completed.
+
+*   **[x] Phase 1 Subsystems (Active)**
+    *   [x] Subsystem 1: Dependency Injection Container
+    *   [x] Subsystem 2: Configuration Manager (Refactored to `ConfigProvider` abstraction)
+    *   [x] Subsystem 3: Event Bus
+        *   Architectural refinements integrated: Event validation (`DOMAIN.ACTION.STATUS`), `TopicMatcher` abstraction, `unsubscribe()` support, and event lifecycle hooks.
+
 ## Active Work
-Drafting the detailed Phase 1 Architecture Proposal for the Chhaya Kernel.
+Phase 1 Implementation: Building Subsystem 4 (Provider Registry).
 
 ## Next Up
-Phase 1 Implementation: Building the core Chhaya Kernel execution loop and local LLM integrations.
+Phase 1 Implementation: Subsystem 5 (Plugin Manager) and Subsystem 6 (Lifecycle Manager).
