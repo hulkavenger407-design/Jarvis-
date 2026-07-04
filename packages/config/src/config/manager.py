@@ -4,31 +4,15 @@ Configuration Manager Subsystem.
 Provides environment validation, loading, and type-safe retrieval of
 configuration values for the Chhaya Kernel.
 """
-import os
 from collections.abc import Sequence
 from typing import Any
 
-from .provider import ConfigProvider
+from .provider import ConfigProvider, DictionaryProvider, EnvironmentProvider
 
 
 class ConfigError(Exception):
     """Raised when a configuration value is missing or invalid."""
     pass
-
-
-class EnvironmentProvider:
-    """Reads configuration from os.environ."""
-    def get(self, key: str) -> Any | None:
-        return os.environ.get(key)
-
-
-class DictionaryProvider:
-    """Reads configuration from a static dictionary."""
-    def __init__(self, data: dict[str, Any]) -> None:
-        self.data = data
-
-    def get(self, key: str) -> Any | None:
-        return self.data.get(key)
 
 
 class ConfigManager:

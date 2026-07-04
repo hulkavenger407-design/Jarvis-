@@ -2,9 +2,19 @@
 Core Data Models for the Event Bus.
 """
 import datetime
+import re
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
+
+
+class EventValidationError(ValueError):
+    """Raised when an Event fails validation against the Kernel Events Specification."""
+    pass
+
+
+# Strict DOMAIN.ACTION.STATUS convention (e.g. 'agent.task.completed')
+EVENT_TYPE_REGEX = re.compile(r"^[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$")
 
 
 @dataclass
@@ -30,6 +40,12 @@ class Event:
 
     # Control flow flags (not part of the spec payload directly, but used internally)
     _is_cancelled: bool = field(default=False, repr=False, init=False)
+
+    def __post_init__(self) -> None:
+        if not EVENT_TYPE_REGEX.match(self.type):
+            raise EventValidationError(
+                f"Invalid event type '{self.type}'. Must follow DOMAIN.ACTION.STATUS format."
+            )
 
     def cancel(self) -> None:
         """
