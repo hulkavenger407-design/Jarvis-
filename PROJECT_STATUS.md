@@ -21,9 +21,11 @@
     *   [x] Subsystem 2: Configuration Manager (Refactored to `ConfigProvider` abstraction)
     *   [x] Subsystem 3: Event Bus
         *   Architectural refinements integrated: Event validation (`DOMAIN.ACTION.STATUS`), `TopicMatcher` abstraction, `unsubscribe()` support, and event lifecycle hooks.
+    *   [x] Subsystem 4: Provider Registry
+    *   [x] Subsystem 5: Plugin Manager
 
 ## Active Work
-Phase 1 Implementation: Building Subsystem 4 (Provider Registry).
+Phase 1 Implementation: Subsystem 6 (Lifecycle Manager).
 
 ## Next Up
-Phase 1 Implementation: Subsystem 5 (Plugin Manager) and Subsystem 6 (Lifecycle Manager).
+Phase 1 Implementation: Subsystem 7 (State Manager).
