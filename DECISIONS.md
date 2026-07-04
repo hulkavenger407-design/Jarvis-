@@ -14,3 +14,4 @@ This document tracks all major architectural decisions made during the developme
 | 0006 | [Event-Driven Bus](docs/decisions/0006-event-driven-bus.md) | Accepted | 2024-07-03 |
 | 0007 | [VRAM Context Switching](docs/decisions/0007-vram-context-switching.md) | Accepted | 2024-07-03 |
 | 0008 | [Provider Registry and Interfaces](docs/decisions/0008-provider-registry-pattern.md) | Accepted | 2024-07-03 |
+| 0009 | [Lifecycle Manager Architecture](docs/decisions/0009-lifecycle-manager-architecture.md) | Accepted | 2024-07-03 |

@@ -25,7 +25,7 @@
     *   [x] Subsystem 5: Plugin Manager
 
 ## Active Work
-Phase 1 Implementation: Subsystem 6 (Lifecycle Manager).
+Phase 1 Design: Subsystem 6 (Lifecycle Manager).
 
 ## Next Up
 Phase 1 Implementation: Subsystem 7 (State Manager).
