@@ -34,7 +34,7 @@ select = ["E", "F", "I", "UP"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["packages/kernel/src", "packages/config/src"]
+pythonpath = ["packages/kernel/src", "packages/config/src", "packages/event_bus/src"]
 addopts = "-v  --cov-report=term-missing"
 
 [tool.mypy]
@@ -43,4 +43,4 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 exclude = [".venv", "node_modules"]
-mypy_path = "packages/kernel/src:packages/config/src"
+mypy_path = "packages/kernel/src:packages/config/src:packages/event_bus/src"

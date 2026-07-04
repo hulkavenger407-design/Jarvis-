@@ -5,7 +5,10 @@ Provides environment validation, loading, and type-safe retrieval of
 configuration values for the Chhaya Kernel.
 """
 import os
+from collections.abc import Sequence
 from typing import Any
+
+from .provider import ConfigProvider
 
 
 class ConfigError(Exception):
@@ -13,19 +16,55 @@ class ConfigError(Exception):
     pass
 
 
+class EnvironmentProvider:
+    """Reads configuration from os.environ."""
+    def get(self, key: str) -> Any | None:
+        return os.environ.get(key)
+
+
+class DictionaryProvider:
+    """Reads configuration from a static dictionary."""
+    def __init__(self, data: dict[str, Any]) -> None:
+        self.data = data
+
+    def get(self, key: str) -> Any | None:
+        return self.data.get(key)
+
+
 class ConfigManager:
     """
-    Manages application configuration settings, falling back to environment variables.
+    Manages application configuration settings using a chain of ConfigProviders.
+    Providers are queried in order; the first non-None value is returned.
     """
 
-    def __init__(self, initial_config: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        initial_config: dict[str, Any] | None = None,
+        providers: Sequence[ConfigProvider] | None = None
+    ) -> None:
         """
         Initializes the configuration manager.
 
         Args:
-            initial_config: A dictionary of explicit overrides.
+            providers: A sequence of configuration providers. Ordered by priority.
+            initial_config: A legacy dictionary of overrides (prepended as a DictionaryProvider).
         """
-        self._config: dict[str, Any] = initial_config or {}
+        self._providers: list[ConfigProvider] = list(providers) if providers else []
+
+        # Add default providers if not explicitly defined
+        if initial_config:
+            self._providers.insert(0, DictionaryProvider(initial_config))
+
+        if not providers:
+            self._providers.append(EnvironmentProvider())
+
+    def add_provider(self, provider: ConfigProvider) -> None:
+        """Adds a provider to the end of the fallback chain."""
+        self._providers.append(provider)
+
+    def insert_provider(self, provider: ConfigProvider, index: int = 0) -> None:
+        """Inserts a provider at a specific priority level (0 = highest priority)."""
+        self._providers.insert(index, provider)
 
     def get_str(self, key: str, default: str | None = None) -> str:
         """
@@ -75,11 +114,9 @@ class ConfigManager:
         return str(val).lower() in truthy
 
     def _get_raw(self, key: str, default: Any = None) -> Any:
-        """Internal helper to fetch from explicit config first, then os.environ."""
-        if key in self._config:
-            return self._config[key]
-
-        if key in os.environ:
-            return os.environ[key]
-
+        """Internal helper to fetch from the provider chain sequentially."""
+        for provider in self._providers:
+            val = provider.get(key)
+            if val is not None:
+                return val
         return default
