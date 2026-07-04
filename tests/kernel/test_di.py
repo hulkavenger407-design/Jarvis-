@@ -1,7 +1,7 @@
-from typing import Protocol
+from typing import Protocol, cast
 
 import pytest
-from kernel.di import DependencyInjectionError, DIContainer
+from kernel.di import CircularDependencyError, DependencyInjectionError, DIContainer, Lifetime
 
 
 class DummyInterface(Protocol):
@@ -40,6 +40,18 @@ def test_register_and_resolve_singleton(container: DIContainer) -> None:
     assert resolved_again is impl
 
 
+def test_register_and_resolve_lazy_singleton(container: DIContainer) -> None:
+    container.register(DummyInterface, lambda: DummyFactoryImpl(), Lifetime.SINGLETON)
+
+    resolved1 = container.resolve(DummyInterface)
+    assert resolved1.get_value() == "factory_1"
+
+    # Resolving again should return the exactly same cached instance
+    resolved2 = container.resolve(DummyInterface)
+    assert resolved1 is resolved2
+    assert resolved2.get_value() == "factory_2" # State persists
+
+
 def test_register_and_resolve_factory(container: DIContainer) -> None:
     def factory() -> DummyInterface:
         return DummyFactoryImpl()
@@ -68,6 +80,33 @@ def test_register_duplicate_interface(container: DIContainer) -> None:
 
     with pytest.raises(DependencyInjectionError, match="is already registered"):
         container.register_factory(DummyInterface, lambda: DummyImpl())
+
+
+def test_circular_dependency(container: DIContainer) -> None:
+    class InterfaceA(Protocol): ...
+    class InterfaceB(Protocol): ...
+
+    def factory_a() -> InterfaceA:
+        return cast(InterfaceA, container.resolve(InterfaceB))
+
+    def factory_b() -> InterfaceB:
+        return cast(InterfaceB, container.resolve(InterfaceA))
+
+    container.register(InterfaceA, factory_a, Lifetime.TRANSIENT)
+    container.register(InterfaceB, factory_b, Lifetime.TRANSIENT)
+
+    with pytest.raises(CircularDependencyError, match="Circular dependency detected"):
+        container.resolve(InterfaceA)
+
+
+def test_scoped_resolution_stub(container: DIContainer) -> None:
+    container.register(DummyInterface, lambda: DummyImpl(), Lifetime.SCOPED)
+
+    with pytest.raises(DependencyInjectionError, match="without a scope_id"):
+        container.resolve(DummyInterface)
+
+    resolved = container.resolve(DummyInterface, scope_id="session_123")
+    assert isinstance(resolved, DummyImpl)
 
 
 def test_clear_container(container: DIContainer) -> None:
