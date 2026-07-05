@@ -25,9 +25,10 @@
     *   [x] Subsystem 5: Plugin Manager
     *   [x] Subsystem 6: Lifecycle Manager
     *   [x] Subsystem 7: Capability Registry
+    *   [x] Subsystem 8: State Manager
 
 ## Active Work
-Phase 1 Design: Subsystem 8 (State Manager).
+Phase 1 Implementation: Subsystem 9 (Session Manager).
 
 ## Next Up
-Phase 1 Implementation: Subsystem 8 (State Manager).
+Phase 1 Implementation: Subsystem 10 (Task Scheduler).
