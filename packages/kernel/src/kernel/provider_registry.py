@@ -7,7 +7,9 @@ to their concrete injected implementations.
 from collections.abc import Sequence
 from typing import Any
 
+from .capability_registry import Capability, CapabilityRegistry
 from .di import DependencyInjectionError, DIContainer
+from .lifecycle import HealthReport, KernelSubsystem
 
 
 class ProviderRegistryError(Exception):
@@ -15,26 +17,58 @@ class ProviderRegistryError(Exception):
     pass
 
 
-class ProviderRegistry:
+class ProviderRegistry(KernelSubsystem):
     """
     Manages the mapping of abstract Protocol interfaces to concrete providers.
     Provides strict abstraction from underlying technologies.
     """
 
-    def __init__(self, di_container: DIContainer) -> None:
+    def __init__(
+        self,
+        di_container: DIContainer,
+        capability_registry: CapabilityRegistry | None = None
+    ) -> None:
         """
         Initializes the Provider Registry.
 
         Args:
             di_container: The central Dependency Injection container for the Kernel.
+            capability_registry: The registry for exposing provider capabilities.
         """
         self._di = di_container
+        self._cap_registry = capability_registry
         # Dictionary mapping: Interface -> { "name": instance }
         self._providers: dict[Any, dict[str, Any]] = {}
         # Dictionary mapping: Interface -> "name_of_default_provider"
         self._defaults: dict[Any, str] = {}
 
-    def register_provider(
+    @property
+    def name(self) -> str:
+        return "provider_registry"
+
+    @property
+    def dependencies(self) -> list[str]:
+        return ["di_container", "capability_registry"]
+
+    async def initialize(self) -> None:
+        pass
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
+
+    async def shutdown(self) -> None:
+        pass
+
+    async def health(self) -> HealthReport:
+        return HealthReport(is_healthy=True)
+
+    def ready(self) -> bool:
+        return True
+
+    async def register_provider(
         self, interface: Any, name: str, provider: Any, set_as_default: bool = False
     ) -> None:
         """
@@ -44,8 +78,7 @@ class ProviderRegistry:
             interface: The abstract Protocol (e.g., LLMProvider).
             name: A unique string identifier for this provider (e.g., "ollama").
             provider: The concrete instance.
-            set_as_default: If True, this provider will be bound to the DI container natively
-                            so that `di.resolve(interface)` returns this instance automatically.
+            set_as_default: If True, this provider will be bound to the DI container natively.
         """
         if interface not in self._providers:
             self._providers[interface] = {}
@@ -56,6 +89,20 @@ class ProviderRegistry:
             )
 
         self._providers[interface][name] = provider
+
+        # If the provider exposes capabilities, register them dynamically
+        if self._cap_registry and hasattr(provider, "provided_capabilities"):
+            for cap_name in provider.provided_capabilities:
+                try:
+                    cap = Capability(
+                        name=cap_name,
+                        version="1.0.0",  # Default if provider doesn't specify
+                        provider_name=name,
+                        description=f"Auto-registered capability from provider {name}"
+                    )
+                    await self._cap_registry.register_capability(cap)
+                except Exception:
+                    pass
 
         # If it's the first provider for this interface, or explicitly requested, set as default
         if set_as_default or interface not in self._defaults:

@@ -1,5 +1,6 @@
 import pytest
 from event_bus.bus import EventBus
+from kernel.capability_registry import CapabilityRegistry
 from kernel.di import DIContainer, Lifetime
 from kernel.plugin_manager import PluginManager
 from plugin_sdk.base import PluginLoadError, PluginMetadata, PluginProtocol, PluginState
@@ -70,7 +71,8 @@ def manager() -> PluginManager:
     di.register(FailingPlugin, lambda: FailingPlugin(), Lifetime.TRANSIENT)
 
     bus = EventBus()
-    return PluginManager(di, bus)
+    cap = CapabilityRegistry(bus)
+    return PluginManager(di, bus, cap)
 
 
 @pytest.mark.asyncio

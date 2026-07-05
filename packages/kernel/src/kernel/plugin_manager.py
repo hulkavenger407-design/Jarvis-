@@ -11,6 +11,7 @@ from event_bus.bus import EventBus
 from event_bus.models import Event
 from plugin_sdk.base import PluginLoadError, PluginProtocol, PluginState
 
+from .capability_registry import Capability, CapabilityRegistry
 from .di import DIContainer
 from .lifecycle import HealthReport, KernelSubsystem
 
@@ -24,10 +25,12 @@ class PluginManager(KernelSubsystem):
         self,
         di_container: DIContainer,
         event_bus: EventBus,
+        capability_registry: CapabilityRegistry,
         logger: logging.Logger | None = None
     ) -> None:
         self._di = di_container
         self._bus = event_bus
+        self._cap_registry = capability_registry
         self._logger = logger or logging.getLogger("chhaya.plugin_manager")
 
         # Internal state tracking
@@ -45,8 +48,8 @@ class PluginManager(KernelSubsystem):
 
     @property
     def dependencies(self) -> list[str]:
-        # Plugin Manager depends on DI and EventBus being up first
-        return ["di_container", "event_bus"]
+        # Plugin Manager depends on DI, EventBus, and CapabilityRegistry being up first
+        return ["di_container", "event_bus", "capability_registry"]
 
     async def initialize(self) -> None:
         pass
@@ -135,7 +138,7 @@ class PluginManager(KernelSubsystem):
             raise PluginLoadError(f"Failed to load plugin {name}: {e}") from e
 
     async def initialize_plugin(self, name: str) -> None:
-        """Calls the plugin's initialize method."""
+        """Calls the plugin's initialize method and registers its provided capabilities."""
         await self._transition_state(
             name,
             PluginState.LOADED,
@@ -144,6 +147,21 @@ class PluginManager(KernelSubsystem):
             "plugin.initialize.started",
             "plugin.initialize.completed"
         )
+
+        # If successfully initialized, register its capabilities automatically
+        if self._plugin_states.get(name) == PluginState.INITIALIZED:
+            plugin = self._plugins[name]
+            for cap_name in plugin.metadata.provided_capabilities:
+                cap = Capability(
+                    name=cap_name,
+                    version=plugin.metadata.version,
+                    provider_name=name,
+                    description=f"Auto-registered capability from plugin {name}"
+                )
+                try:
+                    await self._cap_registry.register_capability(cap)
+                except Exception as e:
+                    self._logger.warning(f"Failed to register capability {cap_name}: {e}")
 
     async def start_plugin(self, name: str) -> None:
         """Calls the plugin's start method."""
@@ -171,7 +189,7 @@ class PluginManager(KernelSubsystem):
         )
 
     async def unload_plugin(self, name: str) -> None:
-        """Shuts down and unloads a plugin."""
+        """Shuts down and unloads a plugin, unregistering its capabilities."""
         state = self._plugin_states.get(name)
         valid_states = (
             PluginState.STOPPED,
@@ -188,7 +206,12 @@ class PluginManager(KernelSubsystem):
 
         try:
             if name in self._plugins:
-                await self._plugins[name].shutdown()
+                plugin = self._plugins[name]
+                # Auto-unregister capabilities
+                for cap_name in plugin.metadata.provided_capabilities:
+                    await self._cap_registry.unregister_capability(cap_name)
+
+                await plugin.shutdown()
                 del self._plugins[name]
 
             self._plugin_states[name] = PluginState.UNLOADED

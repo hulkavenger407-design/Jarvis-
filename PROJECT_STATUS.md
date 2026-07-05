@@ -26,7 +26,7 @@
     *   [x] Subsystem 6: Lifecycle Manager
 
 ## Active Work
-Phase 1 Implementation: Subsystem 7 (State Manager).
+Phase 1 Implementation: Subsystem 7 (Capability Registry).
 
 ## Next Up
 Phase 1 Implementation: Subsystem 8 (Session Manager).
