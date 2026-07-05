@@ -24,9 +24,10 @@
     *   [x] Subsystem 4: Provider Registry
     *   [x] Subsystem 5: Plugin Manager
     *   [x] Subsystem 6: Lifecycle Manager
+    *   [x] Subsystem 7: Capability Registry
 
 ## Active Work
-Phase 1 Implementation: Subsystem 7 (Capability Registry).
+Phase 1 Design: Subsystem 8 (State Manager).
 
 ## Next Up
-Phase 1 Implementation: Subsystem 8 (Session Manager).
+Phase 1 Implementation: Subsystem 8 (State Manager).
