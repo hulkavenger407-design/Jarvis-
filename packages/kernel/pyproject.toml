@@ -2,7 +2,10 @@
 name = "kernel"
 version = "0.0.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "croniter>=6.2.3",
+    "types-croniter>=6.2.3.20260704",
+]
 
 [build-system]
 requires = ["hatchling"]
