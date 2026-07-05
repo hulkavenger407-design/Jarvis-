@@ -28,7 +28,7 @@
     *   [x] Subsystem 8: State Manager
 
 ## Active Work
-Phase 1 Implementation: Subsystem 9 (Session Manager).
+Phase 1 Design: Subsystem 9 (Task Scheduler).
 
 ## Next Up
-Phase 1 Implementation: Subsystem 10 (Task Scheduler).
+Phase 1 Implementation: Subsystem 9 (Task Scheduler).
