@@ -23,9 +23,10 @@
         *   Architectural refinements integrated: Event validation (`DOMAIN.ACTION.STATUS`), `TopicMatcher` abstraction, `unsubscribe()` support, and event lifecycle hooks.
     *   [x] Subsystem 4: Provider Registry
     *   [x] Subsystem 5: Plugin Manager
+    *   [x] Subsystem 6: Lifecycle Manager
 
 ## Active Work
-Phase 1 Design: Subsystem 6 (Lifecycle Manager).
+Phase 1 Implementation: Subsystem 7 (State Manager).
 
 ## Next Up
-Phase 1 Implementation: Subsystem 7 (State Manager).
+Phase 1 Implementation: Subsystem 8 (Session Manager).

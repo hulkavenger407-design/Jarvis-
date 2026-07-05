@@ -12,9 +12,10 @@ from event_bus.models import Event
 from plugin_sdk.base import PluginLoadError, PluginProtocol, PluginState
 
 from .di import DIContainer
+from .lifecycle import HealthReport, KernelSubsystem
 
 
-class PluginManager:
+class PluginManager(KernelSubsystem):
     """
     Manages discovery, loading, and lifecycles of Chhaya Plugins.
     """
@@ -36,6 +37,43 @@ class PluginManager:
         # In a real dynamic environment, this would hold available classes found via importlib
         # For this Phase 1 architectural implementation, we allow injecting classes directly
         self._discovered_classes: dict[str, type[PluginProtocol]] = {}
+
+
+    @property
+    def name(self) -> str:
+        return "plugin_manager"
+
+    @property
+    def dependencies(self) -> list[str]:
+        # Plugin Manager depends on DI and EventBus being up first
+        return ["di_container", "event_bus"]
+
+    async def initialize(self) -> None:
+        pass
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        # Gracefully stop all running plugins
+        for name, state in self._plugin_states.items():
+            if state == PluginState.RUNNING:
+                await self.stop_plugin(name)
+
+    async def shutdown(self) -> None:
+        # Unload all plugins
+        for name in list(self._plugin_states.keys()):
+            await self.unload_plugin(name)
+
+    async def health(self) -> HealthReport:
+        failed = [n for n, s in self._plugin_states.items() if s == PluginState.FAILED]
+        return HealthReport(
+            is_healthy=len(failed) == 0,
+            details={"failed_plugins": str(failed)} if failed else {}
+        )
+
+    def ready(self) -> bool:
+        return True
 
     def discover_plugins(self, plugin_classes: list[type[PluginProtocol]]) -> None:
         """
