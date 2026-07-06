@@ -188,3 +188,89 @@ async def test_cron_trigger(scheduler: TaskScheduler) -> None:
 
     # Check that manual firing doesn't break
     await scheduler.submit(task, trigger=trigger)
+
+
+@pytest.mark.asyncio
+async def test_high_concurrency(scheduler: TaskScheduler) -> None:
+    # 1000 tasks
+    tasks = [DummyTask(succeed=True, sleep=0.001) for _ in range(1000)]
+    ids = []
+
+    # We submit them quickly
+    for t in tasks:
+        tid = await scheduler.submit(t)
+        ids.append(tid)
+
+    # Wait enough time for all to process
+    # With 2 workers each taking 1ms, they can process ~2000 tasks/sec.
+    # We sleep 1 second to be safe
+    await asyncio.sleep(1.0)
+
+    # Verify execution count
+    total_execs = sum(t.executions for t in tasks)
+    assert total_execs == 1000
+
+    # Completed list bounds should handle up to 10k, so they should all be in there
+    assert len(scheduler._completed) == 1000
+
+
+@pytest.mark.asyncio
+async def test_deep_cancellation(scheduler: TaskScheduler) -> None:
+    # Task that sleeps a lot so we can cancel it mid-flight or before flight
+    t_slow = DummyTask(sleep=1.0)
+
+    # Pause scheduler to fill queue
+    scheduler.pause()
+    tid_1 = await scheduler.submit(t_slow)
+
+    # Cancel while paused (before flight)
+    await scheduler.cancel(tid_1)
+
+    scheduler.resume()
+    await asyncio.sleep(0.1)
+
+    # Executions should be 0 since it was cancelled before execution
+    assert t_slow.executions == 0
+    assert tid_1 in scheduler._cancelled
+
+
+@pytest.mark.asyncio
+async def test_mid_flight_cancellation(scheduler: TaskScheduler) -> None:
+    # Test cancelling a task that is actively running
+    class LongRunningTask(Task):
+        def __init__(self) -> None:
+            self.started = False
+            self.finished = False
+            self.cancelled = False
+
+        async def execute(self, ctx: TaskContext) -> TaskResult:
+            self.started = True
+            try:
+                # wait until cancelled or complete
+                await ctx.is_cancelled.wait()
+                self.cancelled = True
+            except asyncio.CancelledError:
+                self.cancelled = True
+            self.finished = True
+            return TaskResult(success=True)
+
+    t = LongRunningTask()
+    tid = await scheduler.submit(t)
+
+    # Give it time to start
+    await asyncio.sleep(0.1)
+    assert t.started is True
+    assert t.finished is False
+
+    # Cancel it
+    await scheduler.cancel(tid)
+
+    # Give it time to react
+    await asyncio.sleep(0.1)
+
+    # It should have caught the event
+    assert t.cancelled is True
+    assert t.finished is True
+
+    # Wait, the executor catches it and then the worker loops, does the worker delete it?
+    assert tid not in scheduler._active_tasks

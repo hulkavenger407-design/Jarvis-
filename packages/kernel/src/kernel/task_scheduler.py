@@ -216,8 +216,8 @@ class TaskScheduler(KernelSubsystem):
 
         self._active_tasks: dict[str, ScheduledTask] = {}
         self._waiting: dict[str, ScheduledTask] = {}
-        self._completed: set[str] = set()
-        self._cancelled: set[str] = set()
+        self._completed: dict[str, bool] = {}
+        self._cancelled: dict[str, bool] = {}
         self._dlq: dict[str, ScheduledTask] = {}
 
         self._cancellation_events: dict[str, asyncio.Event] = {}
@@ -239,7 +239,10 @@ class TaskScheduler(KernelSubsystem):
             self._promoter.cancel()
         for w in self._workers:
             w.cancel()
-        await asyncio.gather(*self._workers, return_exceptions=True)
+        tasks_to_gather = list(self._workers)
+        if hasattr(self, "_promoter"):
+            tasks_to_gather.append(self._promoter)
+        await asyncio.gather(*tasks_to_gather, return_exceptions=True)
 
     def pause(self) -> None:
         self._is_paused = True
@@ -279,7 +282,11 @@ class TaskScheduler(KernelSubsystem):
         return tid
 
     async def cancel(self, task_id: str) -> None:
-        self._cancelled.add(task_id)
+        self._cancelled[task_id] = True
+        if len(self._cancelled) > 10000:
+            del self._cancelled[next(iter(self._cancelled))]
+        if task_id in self._waiting:
+            del self._waiting[task_id]
         if task_id in self._cancellation_events:
             self._cancellation_events[task_id].set()
         await self._bus.publish(
@@ -362,7 +369,9 @@ class TaskScheduler(KernelSubsystem):
 
             if result.success:
                 scheduled.status = TaskState.COMPLETED
-                self._completed.add(scheduled.id)
+                self._completed[scheduled.id] = True
+                if len(self._completed) > 10000:
+                    del self._completed[next(iter(self._completed))]
                 await self._bus.publish(
                     Event(type="task.execution.completed", payload={"task_id": scheduled.id})
                 )
@@ -404,6 +413,8 @@ class TaskScheduler(KernelSubsystem):
                 else:
                     scheduled.status = TaskState.FAILED
                     self._dlq[scheduled.id] = scheduled
+                    if len(self._dlq) > 10000:
+                        del self._dlq[next(iter(self._dlq))]
                     await self._bus.publish(
                         Event(type="task.execution.failed", payload={"task_id": scheduled.id})
                     )

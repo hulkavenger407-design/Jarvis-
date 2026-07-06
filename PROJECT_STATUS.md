@@ -26,9 +26,10 @@
     *   [x] Subsystem 6: Lifecycle Manager
     *   [x] Subsystem 7: Capability Registry
     *   [x] Subsystem 8: State Manager
+    *   [x] Subsystem 9: Task Scheduler
 
 ## Active Work
-Phase 1 Design: Subsystem 9 (Task Scheduler).
+Phase 1 Subsystems (Next: Subsystem 10 - Session Manager)
 
 ## Next Up
-Phase 1 Implementation: Subsystem 9 (Task Scheduler).
+Phase 1 Implementation: Subsystem 10 (Session Manager).
