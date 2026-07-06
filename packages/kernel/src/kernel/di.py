@@ -4,6 +4,7 @@ Dependency Injection Container.
 Provides a lightweight, type-safe Dependency Injection (DI) container for the
 Chhaya Kernel. Supports registering different lifecycles (Singleton, Transient, Scoped).
 """
+
 import enum
 from collections.abc import Callable
 from typing import Any, TypeVar
@@ -13,16 +14,19 @@ T = TypeVar("T")
 
 class DependencyInjectionError(Exception):
     """Raised when a dependency cannot be resolved or is improperly registered."""
+
     pass
 
 
 class CircularDependencyError(DependencyInjectionError):
     """Raised when a circular dependency is detected during resolution."""
+
     pass
 
 
 class Lifetime(enum.Enum):
     """Defines the lifetime of a registered dependency."""
+
     SINGLETON = "singleton"
     TRANSIENT = "transient"  # Replaces 'factory' naming for clarity
     SCOPED = "scoped"
@@ -131,8 +135,6 @@ class DIContainer:
                     raise DependencyInjectionError(
                         f"Cannot resolve scoped dependency {interface.__name__} without a scope_id."
                     )
-                # TODO: Implement full scope caching dictionary mapping scope_id -> instances.
-                # For now, just generate it like a transient to fulfill the interface contract.
                 return self._scoped_factories[interface]()
 
             raise DependencyInjectionError(

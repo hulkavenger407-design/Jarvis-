@@ -16,7 +16,7 @@ async def test_capability_lifecycle(registry: CapabilityRegistry) -> None:
         name="test_capability",
         version="1.0.0",
         description="A test capability",
-        provider_name="test_plugin"
+        provider_name="test_plugin",
     )
 
     assert not registry.has_capability("test_capability")
@@ -75,7 +75,7 @@ async def test_event_publishing() -> None:
     assert events_seen == [
         "capability.register.started",
         "capability.register.completed",
-        "capability.unregister.completed"
+        "capability.unregister.completed",
     ]
 
 

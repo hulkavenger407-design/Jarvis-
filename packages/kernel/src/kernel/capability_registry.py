@@ -4,6 +4,7 @@ Capability Registry Subsystem.
 Manages the registration and discovery of capabilities provided by plugins
 and providers across the Chhaya Kernel ecosystem.
 """
+
 import logging
 from dataclasses import dataclass, field
 from typing import Any
@@ -16,6 +17,7 @@ from .lifecycle import HealthReport, KernelSubsystem
 
 class CapabilityRegistryError(Exception):
     """Raised when a capability cannot be registered or resolved."""
+
     pass
 
 
@@ -24,6 +26,7 @@ class Capability:
     """
     Represents a specific, versioned capability provided by a plugin or provider.
     """
+
     name: str
     version: str
     description: str = ""
@@ -81,9 +84,8 @@ class CapabilityRegistry(KernelSubsystem):
         """
         if capability.name in self._capabilities:
             raise CapabilityRegistryError(
-                f"Capability '{capability.name}' is already registered by " \
+                f"Capability '{capability.name}' is already registered by "
                 f"'{self._capabilities[capability.name].provider_name}'."
-
             )
 
         await self._bus.publish(

@@ -103,6 +103,7 @@ async def test_observers_and_events() -> None:
     store = StateManager(bus)
 
     bus_events = []
+
     async def capture_event(e: Event) -> None:
         bus_events.append(e.type)
 
@@ -115,10 +116,13 @@ async def test_observers_and_events() -> None:
 
         def before_change(self, change: StateChange) -> None:
             self.before_calls.append(change)
+
         def after_change(self, change: StateChange) -> None:
             self.after_calls.append(change)
+
         def before_snapshot(self, description: str) -> None:
             self.before_calls.append(description)
+
         def after_snapshot(self, snapshot: StateSnapshot) -> None:
             self.after_calls.append(snapshot)
 
@@ -139,7 +143,7 @@ async def test_observers_and_events() -> None:
     await store.create_snapshot(description="test_snap")
     assert "state.snapshot.created" in bus_events
     assert "test_snap" in obs.before_calls
-    assert len(obs.after_calls) == 2 # 1 change, 1 snapshot
+    assert len(obs.after_calls) == 2  # 1 change, 1 snapshot
 
 
 @pytest.mark.asyncio
@@ -151,14 +155,16 @@ async def test_lifecycle_and_health(store: StateManager) -> None:
     health = await store.health()
     assert health.is_healthy is True
 
-    await store.initialize() # Should not raise
+    await store.initialize()  # Should not raise
     await store.start()
     await store.stop()
     await store.shutdown()
 
+
 @pytest.mark.asyncio
 async def test_state_serializer() -> None:
     from kernel.state_manager import DefaultStateSerializer
+
     serializer = DefaultStateSerializer()
 
     obj = {"a": 1, "b": [1, 2, 3]}

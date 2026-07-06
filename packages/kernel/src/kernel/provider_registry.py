@@ -4,6 +4,7 @@ Provider Registry Subsystem.
 The hardware/service abstraction layer mapping abstract interfaces
 to their concrete injected implementations.
 """
+
 from collections.abc import Sequence
 from typing import Any
 
@@ -14,6 +15,7 @@ from .lifecycle import HealthReport, KernelSubsystem
 
 class ProviderRegistryError(Exception):
     """Raised when a provider cannot be registered or resolved."""
+
     pass
 
 
@@ -24,9 +26,7 @@ class ProviderRegistry(KernelSubsystem):
     """
 
     def __init__(
-        self,
-        di_container: DIContainer,
-        capability_registry: CapabilityRegistry | None = None
+        self, di_container: DIContainer, capability_registry: CapabilityRegistry | None = None
     ) -> None:
         """
         Initializes the Provider Registry.
@@ -98,7 +98,7 @@ class ProviderRegistry(KernelSubsystem):
                         name=cap_name,
                         version="1.0.0",  # Default if provider doesn't specify
                         provider_name=name,
-                        description=f"Auto-registered capability from provider {name}"
+                        description=f"Auto-registered capability from provider {name}",
                     )
                     await self._cap_registry.register_capability(cap)
                 except Exception:

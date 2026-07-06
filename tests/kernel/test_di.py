@@ -49,7 +49,7 @@ def test_register_and_resolve_lazy_singleton(container: DIContainer) -> None:
     # Resolving again should return the exactly same cached instance
     resolved2 = container.resolve(DummyInterface)
     assert resolved1 is resolved2
-    assert resolved2.get_value() == "factory_2" # State persists
+    assert resolved2.get_value() == "factory_2"  # State persists
 
 
 def test_register_and_resolve_factory(container: DIContainer) -> None:
@@ -64,7 +64,7 @@ def test_register_and_resolve_factory(container: DIContainer) -> None:
     # Resolving again should return a new instance from the factory
     resolved2 = container.resolve(DummyInterface)
     assert resolved1 is not resolved2
-    assert resolved2.get_value() == "factory_1" # fresh counter
+    assert resolved2.get_value() == "factory_1"  # fresh counter
 
 
 def test_resolve_unregistered_interface(container: DIContainer) -> None:
@@ -84,6 +84,7 @@ def test_register_duplicate_interface(container: DIContainer) -> None:
 
 def test_circular_dependency(container: DIContainer) -> None:
     class InterfaceA(Protocol): ...
+
     class InterfaceB(Protocol): ...
 
     def factory_a() -> InterfaceA:

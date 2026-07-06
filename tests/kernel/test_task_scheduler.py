@@ -271,6 +271,4 @@ async def test_mid_flight_cancellation(scheduler: TaskScheduler) -> None:
     # It should have caught the event
     assert t.cancelled is True
     assert t.finished is True
-
-    # Wait, the executor catches it and then the worker loops, does the worker delete it?
     assert tid not in scheduler._active_tasks

@@ -84,7 +84,6 @@ class IntervalTrigger(Trigger):
         now = datetime.datetime.now(datetime.UTC)
         if not last_run:
             return now
-        # strictly interval from now if not running for a while, or from last_run?
         return now + self.interval
 
 
@@ -155,8 +154,6 @@ class DefaultTaskExecutor(TaskExecutor):
             return result
         except TimeoutError:
             return TaskResult(success=False, error=TaskSchedulerError("Task timed out"))
-        except TimeoutError:
-            return TaskResult(success=False, error=TaskSchedulerError("Task timed out"))
         except Exception as e:
             return TaskResult(success=False, error=e)
 
@@ -172,16 +169,11 @@ class InMemoryTaskQueue(TaskQueue):
 
     async def pop(self) -> ScheduledTask:
         while True:
-            try:
-                task = await asyncio.wait_for(self._queue.get(), timeout=0.1)
-                if task.id in self._items:
-                    del self._items[task.id]
-                    return task
-                self._queue.task_done()
-            except Exception as e:
-                if isinstance(e, TimeoutError) or type(e).__name__ == "TimeoutError":
-                    raise TimeoutError()
-                raise
+            task = await asyncio.wait_for(self._queue.get(), timeout=0.1)
+            if task.id in self._items:
+                del self._items[task.id]
+                return task
+            self._queue.task_done()
 
 
 class TaskScheduler(KernelSubsystem):

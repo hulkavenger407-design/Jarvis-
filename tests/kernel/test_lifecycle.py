@@ -1,4 +1,3 @@
-
 import pytest
 from event_bus.bus import EventBus
 from event_bus.models import Event
@@ -19,23 +18,32 @@ class MockSubsystem:
         self.fail_on_init = False
 
     @property
-    def name(self) -> str: return self._name
+    def name(self) -> str:
+        return self._name
+
     @property
-    def dependencies(self) -> list[str]: return self._deps
+    def dependencies(self) -> list[str]:
+        return self._deps
 
     async def initialize(self) -> None:
         if self.fail_on_init:
             raise ValueError("Init Boom")
         self.log.append("init")
 
-    async def start(self) -> None: self.log.append("start")
-    async def stop(self) -> None: self.log.append("stop")
-    async def shutdown(self) -> None: self.log.append("shutdown")
+    async def start(self) -> None:
+        self.log.append("start")
+
+    async def stop(self) -> None:
+        self.log.append("stop")
+
+    async def shutdown(self) -> None:
+        self.log.append("shutdown")
 
     async def health(self) -> HealthReport:
         return HealthReport(True)
 
-    def ready(self) -> bool: return True
+    def ready(self) -> bool:
+        return True
 
 
 @pytest.fixture
@@ -141,6 +149,7 @@ async def test_event_publishing() -> None:
     bus = EventBus()
 
     events_seen = []
+
     async def capture(e: Event) -> None:
         events_seen.append(e.type)
 
@@ -155,5 +164,5 @@ async def test_event_publishing() -> None:
         "system.state.starting",
         "system.state.running",
         "system.state.stopping",
-        "system.state.shutdown"
+        "system.state.shutdown",
     ]

@@ -5,6 +5,7 @@ Manages the lifecycle, dependencies, and state of third-party plugins.
 Does not execute plugin logic directly, but rather integrates them
 with the DI Container and Event Bus.
 """
+
 import logging
 
 from event_bus.bus import EventBus
@@ -26,7 +27,7 @@ class PluginManager(KernelSubsystem):
         di_container: DIContainer,
         event_bus: EventBus,
         capability_registry: CapabilityRegistry,
-        logger: logging.Logger | None = None
+        logger: logging.Logger | None = None,
     ) -> None:
         self._di = di_container
         self._bus = event_bus
@@ -40,7 +41,6 @@ class PluginManager(KernelSubsystem):
         # In a real dynamic environment, this would hold available classes found via importlib
         # For this Phase 1 architectural implementation, we allow injecting classes directly
         self._discovered_classes: dict[str, type[PluginProtocol]] = {}
-
 
     @property
     def name(self) -> str:
@@ -71,8 +71,7 @@ class PluginManager(KernelSubsystem):
     async def health(self) -> HealthReport:
         failed = [n for n, s in self._plugin_states.items() if s == PluginState.FAILED]
         return HealthReport(
-            is_healthy=len(failed) == 0,
-            details={"failed_plugins": str(failed)} if failed else {}
+            is_healthy=len(failed) == 0, details={"failed_plugins": str(failed)} if failed else {}
         )
 
     def ready(self) -> bool:
@@ -127,9 +126,7 @@ class PluginManager(KernelSubsystem):
             instance = self._di.resolve(cls)
             self._plugins[name] = instance
 
-            await self._bus.publish(
-                Event(type="plugin.load.completed", payload={"plugin": name})
-            )
+            await self._bus.publish(Event(type="plugin.load.completed", payload={"plugin": name}))
         except Exception as e:
             self._plugin_states[name] = PluginState.FAILED
             await self._bus.publish(
@@ -145,7 +142,7 @@ class PluginManager(KernelSubsystem):
             PluginState.INITIALIZED,
             "initialize",
             "plugin.initialize.started",
-            "plugin.initialize.completed"
+            "plugin.initialize.completed",
         )
 
         # If successfully initialized, register its capabilities automatically
@@ -156,7 +153,7 @@ class PluginManager(KernelSubsystem):
                     name=cap_name,
                     version=plugin.metadata.version,
                     provider_name=name,
-                    description=f"Auto-registered capability from plugin {name}"
+                    description=f"Auto-registered capability from plugin {name}",
                 )
                 try:
                     await self._cap_registry.register_capability(cap)
@@ -171,7 +168,7 @@ class PluginManager(KernelSubsystem):
             PluginState.RUNNING,
             "start",
             "plugin.start.started",
-            "plugin.start.completed"
+            "plugin.start.completed",
         )
 
     async def stop_plugin(self, name: str) -> None:
@@ -185,7 +182,7 @@ class PluginManager(KernelSubsystem):
             PluginState.STOPPED,
             "stop",
             "plugin.stop.started",
-            "plugin.stop.completed"
+            "plugin.stop.completed",
         )
 
     async def unload_plugin(self, name: str) -> None:
@@ -195,7 +192,7 @@ class PluginManager(KernelSubsystem):
             PluginState.STOPPED,
             PluginState.FAILED,
             PluginState.INITIALIZED,
-            PluginState.LOADED
+            PluginState.LOADED,
         )
         if state not in valid_states:
             # Try to gracefully stop it first if it's running
@@ -215,9 +212,7 @@ class PluginManager(KernelSubsystem):
                 del self._plugins[name]
 
             self._plugin_states[name] = PluginState.UNLOADED
-            await self._bus.publish(
-                Event(type="plugin.unload.completed", payload={"plugin": name})
-            )
+            await self._bus.publish(Event(type="plugin.unload.completed", payload={"plugin": name}))
         except Exception as e:
             self._plugin_states[name] = PluginState.FAILED
             self._logger.error(f"Failed to cleanly unload plugin {name}: {e}")
@@ -284,7 +279,7 @@ class PluginManager(KernelSubsystem):
         target_state: PluginState,
         method_name: str,
         start_event: str,
-        complete_event: str
+        complete_event: str,
     ) -> None:
         """Generic state machine transition executing a plugin method securely."""
         if name not in self._plugins:
@@ -292,7 +287,7 @@ class PluginManager(KernelSubsystem):
 
         current_state = self._plugin_states.get(name)
         if current_state != expected_state:
-            cs_val = current_state.value if current_state else 'unknown'
+            cs_val = current_state.value if current_state else "unknown"
             raise PluginLoadError(
                 f"Cannot {method_name} plugin '{name}'. "
                 f"Expected state {expected_state.value}, but is {cs_val}."

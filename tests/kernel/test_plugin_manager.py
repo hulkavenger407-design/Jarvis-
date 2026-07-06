@@ -15,10 +15,17 @@ class DummyPlugin(PluginProtocol):
         self.stop_called = False
         self.shutdown_called = False
 
-    async def initialize(self) -> None: self.init_called = True
-    async def start(self) -> None: self.start_called = True
-    async def stop(self) -> None: self.stop_called = True
-    async def shutdown(self) -> None: self.shutdown_called = True
+    async def initialize(self) -> None:
+        self.init_called = True
+
+    async def start(self) -> None:
+        self.start_called = True
+
+    async def stop(self) -> None:
+        self.stop_called = True
+
+    async def shutdown(self) -> None:
+        self.shutdown_called = True
 
 
 class DependentPlugin(PluginProtocol):
@@ -27,36 +34,74 @@ class DependentPlugin(PluginProtocol):
     def __init__(self) -> None:
         pass
 
-    async def initialize(self) -> None: pass
-    async def start(self) -> None: pass
-    async def stop(self) -> None: pass
-    async def shutdown(self) -> None: pass
+    async def initialize(self) -> None:
+        pass
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
+
+    async def shutdown(self) -> None:
+        pass
 
 
 class CircularA(PluginProtocol):
     metadata = PluginMetadata("A", "1", dependencies=["B"])
-    def __init__(self) -> None: pass
-    async def initialize(self) -> None: pass
-    async def start(self) -> None: pass
-    async def stop(self) -> None: pass
-    async def shutdown(self) -> None: pass
+
+    def __init__(self) -> None:
+        pass
+
+    async def initialize(self) -> None:
+        pass
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
+
+    async def shutdown(self) -> None:
+        pass
+
 
 class CircularB(PluginProtocol):
     metadata = PluginMetadata("B", "1", dependencies=["A"])
-    def __init__(self) -> None: pass
-    async def initialize(self) -> None: pass
-    async def start(self) -> None: pass
-    async def stop(self) -> None: pass
-    async def shutdown(self) -> None: pass
+
+    def __init__(self) -> None:
+        pass
+
+    async def initialize(self) -> None:
+        pass
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
+
+    async def shutdown(self) -> None:
+        pass
 
 
 class FailingPlugin(PluginProtocol):
     metadata = PluginMetadata("failer", "1.0")
-    def __init__(self) -> None: pass
-    async def initialize(self) -> None: raise ValueError("Init failed")
-    async def start(self) -> None: pass
-    async def stop(self) -> None: pass
-    async def shutdown(self) -> None: pass
+
+    def __init__(self) -> None:
+        pass
+
+    async def initialize(self) -> None:
+        raise ValueError("Init failed")
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
+
+    async def shutdown(self) -> None:
+        pass
 
 
 @pytest.fixture
@@ -166,6 +211,7 @@ async def test_reload(manager: PluginManager) -> None:
 
     # Reload unloads and restarts the plugin, so it should be back in RUNNING state
     assert manager.list_plugins()["dummy"] == PluginState.RUNNING
+
 
 @pytest.mark.asyncio
 async def test_duplicate_plugins(manager: PluginManager) -> None:

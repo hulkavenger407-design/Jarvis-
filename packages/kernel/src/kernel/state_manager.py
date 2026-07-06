@@ -5,6 +5,7 @@ The central, async-safe, transaction-safe data store for all operational
 state within the Chhaya Kernel. Abstracts backend storage and provides
 robust observability and snapshotting.
 """
+
 import asyncio
 import copy
 import datetime
@@ -23,6 +24,7 @@ from .lifecycle import HealthReport
 
 class StateManagerError(Exception):
     """Base exception for State Manager operations."""
+
     pass
 
 
@@ -48,6 +50,7 @@ class StateChange:
 @dataclass(frozen=True)
 class StateSnapshot:
     """A versioned, point-in-time serialized snapshot of a state tree."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(datetime.UTC).isoformat())
     version: int = 1
@@ -56,21 +59,26 @@ class StateSnapshot:
     data: dict[StateCategory, dict[str, Any]] = field(default_factory=dict)
 
 
-
 class StateSerializer(Protocol):
     """Protocol for serializing state objects into JSON-safe dictionaries."""
+
     def serialize(self, obj: Any) -> dict[str, Any] | str | int | float | bool | None: ...
     def deserialize(self, data: Any) -> Any: ...
 
+
 class DefaultStateSerializer:
     """A basic serializer for primitive types."""
+
     def serialize(self, obj: Any) -> Any:
-        return copy.deepcopy(obj) # Deep copy is sufficient for InMemory phase 1
+        return copy.deepcopy(obj)  # Deep copy is sufficient for InMemory phase 1
+
     def deserialize(self, data: Any) -> Any:
         return copy.deepcopy(data)
 
+
 class StateObserver(Protocol):
     """Synchronous hook interface for internal kernel reactivity."""
+
     def before_change(self, change: StateChange) -> None: ...
     def after_change(self, change: StateChange) -> None: ...
     def before_snapshot(self, description: str) -> None: ...
@@ -79,6 +87,7 @@ class StateObserver(Protocol):
 
 class StateBackend(Protocol):
     """Abstract protocol for underlying storage implementations."""
+
     async def get(self, category: StateCategory, key: str) -> Any | None: ...
     async def put(self, category: StateCategory, key: str, value: Any) -> None: ...
     async def delete(self, category: StateCategory, key: str) -> None: ...
@@ -89,23 +98,24 @@ class StateBackend(Protocol):
 
 class StateTransaction(Protocol):
     """Context manager for batched, atomic state mutations."""
+
     async def put(self, category: StateCategory, key: str, value: Any) -> None: ...
     async def delete(self, category: StateCategory, key: str) -> None: ...
     async def commit(self) -> None: ...
     async def rollback(self) -> None: ...
-    async def __aenter__(self) -> 'StateTransaction': ...
+    async def __aenter__(self) -> "StateTransaction": ...
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None: ...
 
 
 class StateStore(Protocol):
     """The public API for the StateManager."""
+
     async def get_state(self, category: StateCategory, key: str) -> Any | None: ...
     async def set_state(self, category: StateCategory, key: str, value: Any) -> None: ...
     async def delete_state(self, category: StateCategory, key: str) -> None: ...
     async def update_state(
         self, category: StateCategory, key: str, updater: Callable[[Any], Any]
-    ) -> None:
-        ...
+    ) -> None: ...
     async def has_state(self, category: StateCategory, key: str) -> bool: ...
     async def list_keys(self, category: StateCategory) -> list[str]: ...
 
@@ -116,12 +126,8 @@ class StateStore(Protocol):
 
     async def create_snapshot(
         self, description: str = "", metadata: dict[str, Any] | None = None
-    ) -> StateSnapshot:
-        ...
+    ) -> StateSnapshot: ...
     async def restore_snapshot(self, snapshot: StateSnapshot) -> None: ...
-
-
-
 
 
 class InMemoryStateBackend(StateBackend):
@@ -158,7 +164,7 @@ class DefaultStateTransaction(StateTransaction):
     If an error occurs, it throws away the overlay.
     """
 
-    def __init__(self, manager: 'StateManager') -> None:
+    def __init__(self, manager: "StateManager") -> None:
         self._manager = manager
         self._overlay: dict[StateCategory, dict[str, Any]] = {}
         self._deletions: dict[StateCategory, set[str]] = {}
@@ -179,13 +185,15 @@ class DefaultStateTransaction(StateTransaction):
         self._overlay[category][key] = value
         self._deletions[category].discard(key)
 
-        self._changes.append(StateChange(
-            category=category,
-            key=key,
-            old_value=old_val,
-            new_value=value,
-            action="UPDATE" if old_val is not None else "CREATE"
-        ))
+        self._changes.append(
+            StateChange(
+                category=category,
+                key=key,
+                old_value=old_val,
+                new_value=value,
+                action="UPDATE" if old_val is not None else "CREATE",
+            )
+        )
 
     async def delete(self, category: StateCategory, key: str) -> None:
         # Prefer the overlay value if mutated in this same transaction, otherwise backend
@@ -203,13 +211,11 @@ class DefaultStateTransaction(StateTransaction):
         self._overlay[category].pop(key, None)
         self._deletions[category].add(key)
 
-        self._changes.append(StateChange(
-            category=category,
-            key=key,
-            old_value=old_val,
-            new_value=None,
-            action="DELETE"
-        ))
+        self._changes.append(
+            StateChange(
+                category=category, key=key, old_value=old_val, new_value=None, action="DELETE"
+            )
+        )
 
     async def commit(self) -> None:
         if not self._changes:
@@ -230,13 +236,17 @@ class DefaultStateTransaction(StateTransaction):
                     await self._manager._backend.delete(cat, k)
 
         # Publish transaction committed
-        await self._manager._bus.publish(Event(
-            type="state.transaction.committed",
-            payload={"changes": [
-                {"category": c.category, "key": c.key, "action": c.action}
-                for c in self._changes
-            ]}
-        ))
+        await self._manager._bus.publish(
+            Event(
+                type="state.transaction.committed",
+                payload={
+                    "changes": [
+                        {"category": c.category, "key": c.key, "action": c.action}
+                        for c in self._changes
+                    ]
+                },
+            )
+        )
 
         # Fire after_change on observers
         for change in self._changes:
@@ -254,7 +264,7 @@ class DefaultStateTransaction(StateTransaction):
 
         await self._manager._bus.publish(Event(type="state.transaction.rolled_back"))
 
-    async def __aenter__(self) -> 'DefaultStateTransaction':
+    async def __aenter__(self) -> "DefaultStateTransaction":
         await self._manager._bus.publish(Event(type="state.changed.started"))
         await self._manager._bus.publish(Event(type="state.transaction.started"))
         return self
@@ -276,7 +286,7 @@ class StateManager:
         self,
         event_bus: EventBus,
         backend: StateBackend | None = None,
-        logger: logging.Logger | None = None
+        logger: logging.Logger | None = None,
     ) -> None:
         self._bus = event_bus
         self._backend = backend or InMemoryStateBackend()
@@ -330,15 +340,13 @@ class StateManager:
         async with self.transaction() as tx:
             await tx.delete(category, key)
 
-        await self._bus.publish(Event(
-            type="state.deleted.completed",
-            payload={"category": category, "key": key}
-        ))
+        await self._bus.publish(
+            Event(type="state.deleted.completed", payload={"category": category, "key": key})
+        )
 
-        await self._bus.publish(Event(
-            type="state.deleted.completed",
-            payload={"category": category, "key": key}
-        ))
+        await self._bus.publish(
+            Event(type="state.deleted.completed", payload={"category": category, "key": key})
+        )
 
     async def update_state(
         self, category: StateCategory, key: str, updater: Callable[[Any], Any]
@@ -352,17 +360,22 @@ class StateManager:
             await self._backend.put(category, key, new_val)
 
         change = StateChange(
-            category=category, key=key, old_value=old_val, new_value=new_val,
-            action="UPDATE" if old_val is not None else "CREATE"
+            category=category,
+            key=key,
+            old_value=old_val,
+            new_value=new_val,
+            action="UPDATE" if old_val is not None else "CREATE",
         )
         for obs in self._observers[category]:
             obs.before_change(change)
             obs.after_change(change)
 
-        await self._bus.publish(Event(
-            type="state.changed.completed",
-            payload={"category": category, "key": key, "action": change.action}
-        ))
+        await self._bus.publish(
+            Event(
+                type="state.changed.completed",
+                payload={"category": category, "key": key, "action": change.action},
+            )
+        )
 
     async def has_state(self, category: StateCategory, key: str) -> bool:
         return await self._backend.get(category, key) is not None
@@ -391,16 +404,11 @@ class StateManager:
         async with self._global_lock:
             raw_data = await self._backend.dump_all()
 
-        snap = StateSnapshot(
-            description=description,
-            metadata=metadata or {},
-            data=raw_data
-        )
+        snap = StateSnapshot(description=description, metadata=metadata or {}, data=raw_data)
 
-        await self._bus.publish(Event(
-            type="state.snapshot.created",
-            payload={"snapshot_id": snap.id}
-        ))
+        await self._bus.publish(
+            Event(type="state.snapshot.created", payload={"snapshot_id": snap.id})
+        )
 
         for obs_list in self._observers.values():
             for obs in obs_list:
@@ -419,7 +427,6 @@ class StateManager:
                 for k, v in data.items():
                     await self._backend.put(cat, k, v)
 
-        await self._bus.publish(Event(
-            type="state.snapshot.restored",
-            payload={"snapshot_id": snapshot.id}
-        ))
+        await self._bus.publish(
+            Event(type="state.snapshot.restored", payload={"snapshot_id": snapshot.id})
+        )
