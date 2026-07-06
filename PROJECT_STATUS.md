@@ -29,7 +29,7 @@
     *   [x] Subsystem 9: Task Scheduler
 
 ## Active Work
-Phase 1 Subsystems (Next: Subsystem 10 - Session Manager)
+Phase 1 Design: Subsystem 10 – Agent Runtime / Agent Manager
 
 ## Next Up
-Phase 1 Implementation: Subsystem 10 (Session Manager).
+Phase 1 Implementation: Subsystem 10 (Agent Runtime / Agent Manager).

@@ -17,3 +17,4 @@ This document tracks all major architectural decisions made during the developme
 | 0009 | [Lifecycle Manager Architecture](docs/decisions/0009-lifecycle-manager-architecture.md) | Accepted | 2024-07-03 |
 | 0010 | [State Manager Architecture](docs/decisions/0010-state-manager-architecture.md) | Accepted | 2024-07-03 |
 | 0011 | [Task Scheduler Architecture](docs/decisions/0011-task-scheduler-architecture.md) | Accepted | 2024-07-03 |
+| 0012 | [Agent Runtime Architecture](docs/decisions/0012-agent-runtime-architecture.md) | Proposed | 2024-07-05 |
