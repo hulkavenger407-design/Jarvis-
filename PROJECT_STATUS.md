@@ -27,9 +27,11 @@
     *   [x] Subsystem 7: Capability Registry
     *   [x] Subsystem 8: State Manager
     *   [x] Subsystem 9: Task Scheduler
+    *   [x] Subsystem 10: Agent Runtime
+    *   [x] Subsystem 11 Design
 
 ## Active Work
-Phase 1 Design: Subsystem 10 – Agent Runtime / Agent Manager
+Phase 1 Implementation: Subsystem 11 – Capability Execution Engine
 
 ## Next Up
-Phase 1 Implementation: Subsystem 10 (Agent Runtime / Agent Manager).
+Phase 1 Implementation: Subsystem 12.

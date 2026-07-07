@@ -55,6 +55,18 @@ All events published to the bus must adhere to this base schema (represented as 
 *   `tool.execute.completed`: Emitted by a Provider. Payload: `{ "result": "any" }`.
 *   `tool.execute.failed`: Payload: `{ "error": "string" }`.
 
-### 4.4 Memory Events
+### 4.4 Capability Engine Events
+*   `capability.execution.requested`: Emitted when a capability execution is submitted. Payload: `{ "execution_id": "string", "capability": "string" }`
+*   `capability.execution.authorized`: Emitted after successful capability authorization. Payload: `{ "execution_id": "string", "capability": "string" }`
+*   `capability.execution.started`: Emitted when execution begins on a worker. Payload: `{ "execution_id": "string", "capability": "string" }`
+*   `capability.provider.selected`: Emitted if a provider is resolved for execution. Payload: `{ "execution_id": "string", "provider": "string" }`
+*   `capability.execution.completed`: Emitted on successful completion. Payload: `{ "execution_id": "string", "capability": "string" }`
+*   `capability.execution.failed`: Emitted when execution fails and retries are exhausted. Payload: `{ "execution_id": "string", "capability": "string", "error": "string" }`
+*   `capability.execution.timeout`: Emitted when an execution surpasses its timeout threshold. Payload: `{ "execution_id": "string", "capability": "string", "error": "string" }`
+*   `capability.execution.retry`: Emitted when a capability execution fails but is scheduled for retry. Payload: `{ "execution_id": "string", "capability": "string" }`
+*   `capability.execution.cancelled`: Emitted when execution is explicitly cancelled. Payload: `{ "execution_id": "string", "capability": "string" }`
+*   `capability.execution.finished`: Emitted upon execution termination regardless of outcome. Payload: `{ "execution_id": "string" }`
+
+### 4.5 Memory Events
 *   `memory.store.requested`: Payload: `{ "key": "string", "data": "any", "ttl": "optional int" }`.
 *   `memory.query.completed`: Payload: `{ "results": ["..."] }`.

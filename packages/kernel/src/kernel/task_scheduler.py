@@ -410,5 +410,11 @@ class TaskScheduler(KernelSubsystem):
                     if len(self._dlq) > 10000:
                         del self._dlq[next(iter(self._dlq))]
                     await self._bus.publish(
-                        Event(type="task.execution.failed", payload={"task_id": scheduled.id})
+                        Event(
+                            type="task.execution.failed",
+                            payload={
+                                "task_id": scheduled.id,
+                                "error": str(result.error) if result and result.error else "",
+                            },
+                        )
                     )
