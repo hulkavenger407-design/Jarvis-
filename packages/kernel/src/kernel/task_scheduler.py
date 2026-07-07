@@ -154,6 +154,8 @@ class DefaultTaskExecutor(TaskExecutor):
             return result
         except TimeoutError:
             return TaskResult(success=False, error=TaskSchedulerError("Task timed out"))
+        except asyncio.CancelledError:
+            return TaskResult(success=False, error=Exception("Task cancelled explicitly"))
         except Exception as e:
             return TaskResult(success=False, error=e)
 

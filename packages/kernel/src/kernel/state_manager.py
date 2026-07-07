@@ -344,10 +344,6 @@ class StateManager:
             Event(type="state.deleted.completed", payload={"category": category, "key": key})
         )
 
-        await self._bus.publish(
-            Event(type="state.deleted.completed", payload={"category": category, "key": key})
-        )
-
     async def update_state(
         self, category: StateCategory, key: str, updater: Callable[[Any], Any]
     ) -> None:
