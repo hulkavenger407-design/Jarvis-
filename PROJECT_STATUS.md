@@ -28,10 +28,10 @@
     *   [x] Subsystem 8: State Manager
     *   [x] Subsystem 9: Task Scheduler
     *   [x] Subsystem 10: Agent Runtime
-    *   [x] Subsystem 11 Design
+    *   [x] Subsystem 11: Capability Execution Engine
 
 ## Active Work
-Phase 1 Implementation: Subsystem 11 – Capability Execution Engine
+Phase 1 - Subsystem 12: Memory & Context Engine
 
 ## Next Up
-Phase 1 Implementation: Subsystem 12.
+Phase 1 Implementation: Subsystem 13.
