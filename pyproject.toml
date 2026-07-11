@@ -3,7 +3,9 @@ name = "chhaya-workspace"
 version = "0.0.0"
 description = "Chhaya Agent Factory Workspace"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "croniter>=6.2.3",
+]
 
 [tool.uv.workspace]
 members = [
@@ -21,6 +23,7 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.15.20",
+    "types-croniter>=6.2.3.20260704",
     "uvicorn>=0.49.0",
 ]
 
@@ -35,7 +38,7 @@ select = ["E", "F", "I", "UP"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["packages/kernel/src", "packages/config/src", "packages/event_bus/src", "packages/plugin_sdk/src"]
-addopts = "-v  --cov-report=term-missing"
+addopts = "-v"
 
 [tool.mypy]
 python_version = "3.11"
