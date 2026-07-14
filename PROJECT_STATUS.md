@@ -85,7 +85,7 @@ No architecture layer violations or circular dependencies were found in the curr
 | --- | --- | --- | --- | --- |
 | Kernel Interfaces | Complete | 100% | P0 | Define frozen traits/protocols in `kernel/interfaces.py` |
 | Architecture Fitness | Missing | 0% | P0 | Implement CI gate constraints |
-| DI Container | Exists | 90% | P1 | Implement scoped resolution |
+| DI Container | Complete | 100% | P1 | Scoped resolution implemented |
 | Event Bus | Exists | 80% | P1 | Implement transactional outbox (SQLite) |
 | State Manager | Exists | 70% | P1 | Implement pluggable backends |
 | Memory Engine | Missing | 0% | P2 | Implement ephemeral/persistent engine & vector store adapter |

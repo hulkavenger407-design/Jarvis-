@@ -1,6 +1,8 @@
 from typing import Any
-from kernel.interfaces import IEventBus, IStateManager, IMemoryEngine
-from interfaces.providers import IModelAdapter, IVectorStore, ICapability
+
+from interfaces.providers import IModelAdapter
+from kernel.interfaces import IEventBus, IStateManager
+
 
 def test_ieventbus_protocol() -> None:
     class MockEventBus:
