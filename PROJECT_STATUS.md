@@ -1,3 +1,4 @@
+jules-17875331461821373045-998f53fd
 PROJECT STATUS
 
 Project: Chhaya AI Operating System
@@ -20,7 +21,6 @@ Version Description
 1.1 Added WBS, sequencing, development process, DoD, exit criteria, contributor workflow, ADR, API governance, dependency management, testing strategy, CI/CD, release management, operational readiness, documentation strategy, community governance, technical debt management, performance plan, engineering KPIs, risk register, versioning policy, document control
 2.0 Reserved
 
----
 
 Current Version: 0.1.0‑pre‑alpha (architecture freeze)
 Current Phase: Architecture Complete — Implementation Readiness
@@ -1496,4 +1496,117 @@ Last Updated: 2026-07-13
 
 ---
 
-End of Document
+"""
+Frozen Kernel Interfaces.
+
+These are the immutable architectural foundations of the Chhaya AI OS.
+Any change to these interfaces requires an Architecture Decision Record (ADR).
+"""
+
+from collections.abc import Awaitable, Callable
+from typing import Any, Protocol
+
+
+class Event(Protocol):
+    """Protocol describing the base event structure."""
+
+    type: str
+    version: str
+    payload: dict[str, Any]
+    id: str
+    timestamp: str
+    source: str
+    session_id: str | None
+
+    @property
+    def is_cancelled(self) -> bool:
+        ...
+
+    def cancel(self) -> None:
+        ...
+
+
+EventHandler = Callable[[Event], Any | Awaitable[Any]]
+
+
+class IEventBus(Protocol):
+    """Frozen Event Bus interface."""
+
+    async def publish(self, event: Event) -> None:
+        ...
+
+    def subscribe(
+        self,
+        topic: str,
+        handler: EventHandler,
+        priority: int = 100,
+    ) -> None:
+        ...
+
+    def unsubscribe(
+        self,
+        topic: str,
+        handler: EventHandler,
+    ) -> None:
+        ...
+
+
+class IStateManager(Protocol):
+    """Frozen State Manager interface."""
+
+    async def get_state(self, category: Any, key: str) -> Any | None:
+        ...
+
+    async def set_state(self, category: Any, key: str, value: Any) -> None:
+        ...
+
+    async def delete_state(self, category: Any, key: str) -> None:
+        ...
+
+
+class IMemoryEngine(Protocol):
+    """Frozen Memory Engine interface."""
+
+    ... of Document
+# Project Status
+
+**Current Phase:** Phase 1 (Implementation)
+
+## Milestones Completed
+*   **[x] Phase 0: Foundation (v0.1.0-alpha)**
+    *   Initial Monorepo Structure Setup
+    *   Dependency Management Tooling (pnpm, uv, Turborepo)
+    *   Foundational Documentation Drafted (ARCHITECTURE, ROADMAP, DECISIONS, Architecture Diagrams)
+    *   Tooling configured (Ruff, MyPy, ESLint, Prettier, Pytest, Vitest)
+    *   Core interface packages scaffolded (`kernel`, `interfaces`, `event_bus`, etc.)
+    *   CI/CD Github Actions Configured
+
+*   **[x] Phase 1 Design**
+    *   OS Kernel Architecture Proposal drafted and approved.
+    *   Development Standards (`chhaya-development-standard.md`) ratified.
+    *   Subsystem Specifications (Kernel Events, Plugin API, Provider Interfaces, Agent Lifecycle) completed.
+
+*   **[x] Phase 1 Subsystems (Active)**
+    *   [x] Subsystem 1: Dependency Injection Container
+    *   [x] Subsystem 2: Configuration Manager (Refactored to `ConfigProvider` abstraction)
+    *   [x] Subsystem 3: Event Bus
+        *   Architectural refinements integrated: Event validation (`DOMAIN.ACTION.STATUS`), `TopicMatcher` abstraction, `unsubscribe()` support, and event lifecycle hooks.
+        *   Status: 100% Complete
+        *   Tests: Passing
+        *   Architecture: Compliant
+        *   Review: Passed
+    *   [x] Subsystem 4: Provider Registry
+    *   [x] Subsystem 5: Plugin Manager
+    *   [x] Subsystem 6: Lifecycle Manager
+    *   [x] Subsystem 7: Capability Registry
+    *   [x] Subsystem 8: State Manager
+    *   [x] Subsystem 9: Task Scheduler
+    *   [x] Subsystem 10: Agent Runtime
+    *   [x] Subsystem 11: Capability Execution Engine
+
+## Active Work
+Phase 1 - Subsystem 12: Memory & Context Engine
+
+## Next Up
+Phase 1 Implementation: Subsystem 13.
+phase-0-foundation-405616865675962247

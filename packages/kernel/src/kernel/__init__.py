@@ -1,3 +1,11 @@
-from .interfaces import IEventBus, IMemoryEngine, IStateManager
+"""
+Chhaya Kernel
+"""
 
-__all__ = ["IEventBus", "IStateManager", "IMemoryEngine"]
+from .interfaces import IEventBus, IStateManager, IMemoryEngine
+
+__all__ = [
+    "IEventBus",
+    "IStateManager",
+    "IMemoryEngine",
+]
