@@ -1,17 +1,17 @@
 """
-Core Kernel Interfaces.
+Frozen Kernel Interfaces.
 
-Contains the frozen protocol definitions that define the architectural boundaries
-of the Chhaya Kernel.
+These are the immutable architectural foundations of the Chhaya AI OS.
+Any change to these interfaces requires an Architecture Decision Record (ADR).
 """
+
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
 
 class Event(Protocol):
-    """
-    Protocol for the base structure for an event passing through the Chhaya Kernel.
-    """
+    """Protocol describing the base event structure."""
+
     type: str
     version: str
     payload: dict[str, Any]
@@ -27,20 +27,46 @@ class Event(Protocol):
     def cancel(self) -> None:
         ...
 
+
 EventHandler = Callable[[Event], Any | Awaitable[Any]]
 
-class IEventBus(Protocol):
-    """
-    Frozen protocol defining the core Publish/Subscribe architecture of the Kernel.
-    """
-    def subscribe(self, topic: str, handler: EventHandler) -> None:
-        """Subscribes a handler to a specific exact topic."""
-        ...
 
-    def unsubscribe(self, topic: str, handler: EventHandler) -> None:
-        """Unsubscribes a handler from a specific topic."""
-        ...
+class IEventBus(Protocol):
+    """Frozen Event Bus interface."""
 
     async def publish(self, event: Event) -> None:
-        """Publishes an event to all matching subscribers sequentially."""
         ...
+
+    def subscribe(
+        self,
+        topic: str,
+        handler: EventHandler,
+        priority: int = 100,
+    ) -> None:
+        ...
+
+    def unsubscribe(
+        self,
+        topic: str,
+        handler: EventHandler,
+    ) -> None:
+        ...
+
+
+class IStateManager(Protocol):
+    """Frozen State Manager interface."""
+
+    async def get_state(self, category: Any, key: str) -> Any | None:
+        ...
+
+    async def set_state(self, category: Any, key: str, value: Any) -> None:
+        ...
+
+    async def delete_state(self, category: Any, key: str) -> None:
+        ...
+
+
+class IMemoryEngine(Protocol):
+    """Frozen Memory Engine interface."""
+
+    ...

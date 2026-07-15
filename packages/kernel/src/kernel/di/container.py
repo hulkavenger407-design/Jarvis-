@@ -5,31 +5,49 @@ Provides a lightweight, type-safe Dependency Injection (DI) container for the
 Chhaya Kernel. Supports registering different lifecycles (Singleton, Transient, Scoped).
 """
 
-import enum
 from collections.abc import Callable
 from typing import Any, TypeVar
+
+from .errors import (
+    CircularDependencyError,
+    DependencyInjectionError,
+    ResolutionError,
+    ServiceNotFoundError,
+)
+from .lifetime import Lifetime
 
 T = TypeVar("T")
 
 
-class DependencyInjectionError(Exception):
-    """Raised when a dependency cannot be resolved or is improperly registered."""
+class Scope:
+    """
+    A resolution scope for Scoped dependencies.
+    """
 
-    pass
+    def __init__(self, container: "DIContainer") -> None:
+        self._container = container
+        self._instances: dict[Any, Any] = {}
+        self._disposed = False
 
+    def resolve(self, interface: Any) -> Any:
+        """
+        Resolves a dependency within this scope.
+        """
+        if self._disposed:
+            raise ResolutionError("Cannot resolve from disposed scope.")
 
-class CircularDependencyError(DependencyInjectionError):
-    """Raised when a circular dependency is detected during resolution."""
+        return self._container._resolve_with_scope(interface, self)
 
-    pass
+    def dispose(self) -> None:
+        """Disposes the scope and its instances."""
+        self._instances.clear()
+        self._disposed = True
 
+    def __enter__(self) -> "Scope":
+        return self
 
-class Lifetime(enum.Enum):
-    """Defines the lifetime of a registered dependency."""
-
-    SINGLETON = "singleton"
-    TRANSIENT = "transient"  # Replaces 'factory' naming for clarity
-    SCOPED = "scoped"
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.dispose()
 
 
 class DIContainer:
@@ -40,8 +58,6 @@ class DIContainer:
     def __init__(self) -> None:
         self._singletons: dict[Any, Any] = {}
         self._transients: dict[Any, Callable[[], Any]] = {}
-        # Scoped resolutions are stubbed for future implementation.
-        # They will likely require a scope dictionary: dict[str, dict[Any, Any]]
         self._scoped_factories: dict[Any, Callable[[], Any]] = {}
 
         # Track resolution paths to detect circular dependencies
@@ -91,21 +107,26 @@ class DIContainer:
         ):
             raise DependencyInjectionError(f"Interface {interface.__name__} is already registered.")
 
-    def resolve(self, interface: Any, scope_id: str | None = None) -> Any:
+    def resolve(self, interface: Any) -> Any:
         """
         Resolves and returns an instance for the given interface.
+        If the interface is registered as scoped, it raises ResolutionError unless called via Scope.
 
         Args:
             interface: The type or protocol to resolve.
-            scope_id: Optional ID for resolving SCOPED lifecycles.
 
         Returns:
             An instance matching the requested interface.
 
         Raises:
-            DependencyInjectionError: If the interface is not registered.
+            ServiceNotFoundError: If the interface is not registered.
             CircularDependencyError: If a resolution loop is detected.
+            ResolutionError: If attempting to resolve a SCOPED dependency without a scope.
         """
+        return self._resolve_with_scope(interface, None)
+
+    def _resolve_with_scope(self, interface: Any, scope: Scope | None) -> Any:
+        """Internal resolution logic handling scoping."""
         # 1. Circular dependency check
         if interface in self._resolution_stack:
             raise CircularDependencyError(
@@ -129,20 +150,30 @@ class DIContainer:
             if interface in self._transients:
                 return self._transients[interface]()
 
-            # 4. Check Scoped (Stubbed)
+            # 4. Check Scoped
             if interface in self._scoped_factories:
-                if not scope_id:
-                    raise DependencyInjectionError(
-                        f"Cannot resolve scoped dependency {interface.__name__} without a scope_id."
+                if scope is None:
+                    raise ResolutionError(
+                        f"Cannot resolve scoped {interface.__name__} without scope."
                     )
-                return self._scoped_factories[interface]()
 
-            raise DependencyInjectionError(
+                if interface not in scope._instances:
+                    scope._instances[interface] = self._scoped_factories[interface]()
+
+                return scope._instances[interface]
+
+            raise ServiceNotFoundError(
                 f"Interface {interface.__name__} is not registered in the DI Container."
             )
         finally:
             # Clean up the resolution stack regardless of success or failure
             self._resolution_stack.remove(interface)
+
+    def begin_scope(self) -> Scope:
+        """
+        Creates a new scope for resolving SCOPED dependencies.
+        """
+        return Scope(self)
 
     def clear(self) -> None:
         """Clears all registered dependencies. Useful for testing."""

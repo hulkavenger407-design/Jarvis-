@@ -1,7 +1,14 @@
 from typing import Protocol, cast
 
 import pytest
-from kernel.di import CircularDependencyError, DependencyInjectionError, DIContainer, Lifetime
+from kernel.di import (
+    CircularDependencyError,
+    DependencyInjectionError,
+    DIContainer,
+    Lifetime,
+    ResolutionError,
+    ServiceNotFoundError,
+)
 
 
 class DummyInterface(Protocol):
@@ -68,7 +75,7 @@ def test_register_and_resolve_factory(container: DIContainer) -> None:
 
 
 def test_resolve_unregistered_interface(container: DIContainer) -> None:
-    with pytest.raises(DependencyInjectionError, match="is not registered in the DI Container"):
+    with pytest.raises(ServiceNotFoundError, match="is not registered in the DI Container"):
         container.resolve(DummyInterface)
 
 
@@ -100,19 +107,39 @@ def test_circular_dependency(container: DIContainer) -> None:
         container.resolve(InterfaceA)
 
 
-def test_scoped_resolution_stub(container: DIContainer) -> None:
-    container.register(DummyInterface, lambda: DummyImpl(), Lifetime.SCOPED)
+def test_scoped_resolution(container: DIContainer) -> None:
+    container.register(DummyInterface, lambda: DummyFactoryImpl(), Lifetime.SCOPED)
 
-    with pytest.raises(DependencyInjectionError, match="without a scope_id"):
+    with pytest.raises(ResolutionError, match="Cannot resolve scoped DummyInterface"):
         container.resolve(DummyInterface)
 
-    resolved = container.resolve(DummyInterface, scope_id="session_123")
-    assert isinstance(resolved, DummyImpl)
+    scope1 = container.begin_scope()
+    resolved1_a = scope1.resolve(DummyInterface)
+    resolved1_b = scope1.resolve(DummyInterface)
 
+    assert resolved1_a is resolved1_b  # Within same scope, should be same instance
+
+    scope2 = container.begin_scope()
+    resolved2 = scope2.resolve(DummyInterface)
+
+    assert resolved1_a is not resolved2  # Different scopes, different instances
+
+    scope1.dispose()
+
+    with pytest.raises(ResolutionError, match="Cannot resolve from disposed scope"):
+        scope1.resolve(DummyInterface)
+
+    # test Context manager
+    with container.begin_scope() as scope3:
+        resolved3 = scope3.resolve(DummyInterface)
+        assert resolved3 is not None
+
+    with pytest.raises(ResolutionError, match="Cannot resolve from disposed scope"):
+        scope3.resolve(DummyInterface)
 
 def test_clear_container(container: DIContainer) -> None:
     container.register_singleton(DummyInterface, DummyImpl())
     container.clear()
 
-    with pytest.raises(DependencyInjectionError):
+    with pytest.raises(ServiceNotFoundError):
         container.resolve(DummyInterface)
