@@ -1,23 +1,26 @@
 """
-Compatibility wrapper for State Manager.
-All implementation has moved to `kernel.statemanager`.
+State Manager package.
 """
 
-from kernel.statemanager import (
+from .interfaces import (
+    StateBackend,
+    StateStore,
+    StateTransaction,
+)
+from .models import (
     StateCategory,
     StateChange,
-    StateSnapshot,
-    StateSerializer,
     StateObserver,
-    StateBackend,
-    StateTransaction,
-    StateStore,
-    StateManager,
-    InMemoryStateBackend,
+    StateSerializer,
+)
+from .snapshot import StateSnapshot
+from .store import (
     DefaultStateSerializer,
-    DefaultStateTransaction,
+    InMemoryStateBackend,
+    StateManager,
     StateManagerError,
 )
+from .transaction import DefaultStateTransaction
 
 __all__ = [
     "StateCategory",

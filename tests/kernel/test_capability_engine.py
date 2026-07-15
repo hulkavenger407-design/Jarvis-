@@ -26,7 +26,7 @@ from kernel.capability_engine import (
 from kernel.capability_registry import CapabilityRegistry
 from kernel.di import DIContainer
 from kernel.provider_registry import ProviderRegistry
-from kernel.state_manager import StateCategory, StateManager
+from kernel.statemanager import StateCategory, StateManager
 from kernel.task_scheduler import TaskScheduler
 
 

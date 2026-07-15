@@ -6,7 +6,7 @@ import pytest
 from event_bus.bus import EventBus
 from event_bus.models import Event
 from kernel.di import DIContainer
-from kernel.state_manager import StateManager
+from kernel.statemanager import StateManager
 from kernel.task_scheduler import (
     CronTrigger,
     IntervalTrigger,
