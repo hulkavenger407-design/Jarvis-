@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from event_bus.bus import EventBus
 from event_bus.models import Event
-from kernel.state_manager import StateCategory, StateChange, StateManager, StateSnapshot
+from kernel.statemanager import StateCategory, StateChange, StateManager, StateSnapshot
 
 
 @pytest.fixture
@@ -163,7 +163,7 @@ async def test_lifecycle_and_health(store: StateManager) -> None:
 
 @pytest.mark.asyncio
 async def test_state_serializer() -> None:
-    from kernel.state_manager import DefaultStateSerializer
+    from kernel.statemanager import DefaultStateSerializer
 
     serializer = DefaultStateSerializer()
 

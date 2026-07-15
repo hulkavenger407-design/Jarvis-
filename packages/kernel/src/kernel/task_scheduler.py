@@ -19,7 +19,7 @@ from event_bus.models import Event
 
 from kernel.di import DIContainer
 from kernel.lifecycle import HealthReport, KernelSubsystem
-from kernel.state_manager import StateManager
+from kernel.statemanager import StateManager
 
 
 class TaskPriority(Enum):
