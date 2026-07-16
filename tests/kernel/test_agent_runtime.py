@@ -93,7 +93,7 @@ async def runtime(bus: EventBus, scheduler: TaskScheduler) -> AsyncGenerator[Age
     di = DIContainer()
     state = StateManager(bus)
     cap = CapabilityRegistry(bus)
-    prov = ProviderRegistry(di)
+    prov = ProviderRegistry()
 
     rt = AgentRuntime(
         di=di, bus=bus, state=state, scheduler=scheduler, cap_registry=cap, prov_registry=prov

@@ -128,7 +128,7 @@ async def engine(bus: EventBus, scheduler: TaskScheduler) -> AsyncGenerator[Capa
     di = DIContainer()
     state = StateManager(bus)
     cap = CapabilityRegistry(bus)
-    prov = ProviderRegistry(di)
+    prov = ProviderRegistry()
     agent_rt = MockAgentRuntime(["test.capability", "test.slow", "test.fail", "test.error"])
 
     eng = CapabilityEngine(
