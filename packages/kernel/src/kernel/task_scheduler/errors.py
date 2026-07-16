@@ -1,0 +1,2 @@
+class TaskSchedulerError(Exception):
+    pass
