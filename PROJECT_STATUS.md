@@ -1603,12 +1603,21 @@ class IMemoryEngine(Protocol):
     *   [x] Subsystem 9: Task Scheduler
     *   [x] Subsystem 10: Agent Runtime
     *   [x] Subsystem 11: Capability Execution Engine
+    *   [x] Subsystem 12: Memory Engine (Core Implementation Complete)
 
 ## Active Work
-Phase 1 - Subsystem 12: Memory & Context Engine
+Phase 1 - Subsystem 12: ContextBuilder & Semantic Search (Pending)
 
 ## Next Up
 Phase 1 Implementation: Subsystem 13.
+
+### Memory Engine Notes
+The core Kernel Memory Engine implementation has been completed in `packages/kernel/src/kernel/memory/`.
+- MemoryTier Explicit Implementation (Working, Short-Term, Long-Term)
+- IMemoryEngine Async API completed
+- Dependency Injection for IVectorStore abstraction (Stub implemented)
+- Naive Fallback Search
+- ContextBuilder, semantic retrieval, embedding generation, Scheduler-based TTL cleanup, and advanced context assembly remain as future milestones.
 phase-0-foundation-405616865675962247
 feat/state-manager-implementation-9725322336723295617
 

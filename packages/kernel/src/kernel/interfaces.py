@@ -8,6 +8,8 @@ Any change to these interfaces requires an Architecture Decision Record (ADR).
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
+from .memory.models import MemoryRecord, MemorySearchResult, MemoryTier
+
 
 class Event(Protocol):
     """Protocol describing the base event structure."""
@@ -69,4 +71,40 @@ class IStateManager(Protocol):
 class IMemoryEngine(Protocol):
     """Frozen Memory Engine interface."""
 
-    ...
+    async def get_memory(
+        self,
+        tier: MemoryTier,
+        namespace: str,
+        key: str,
+    ) -> MemoryRecord | None:
+        ...
+
+    async def put_memory(
+        self,
+        record: MemoryRecord,
+    ) -> None:
+        ...
+
+    async def delete_memory(
+        self,
+        tier: MemoryTier,
+        namespace: str,
+        key: str,
+    ) -> None:
+        ...
+
+    async def search(
+        self,
+        tier: MemoryTier,
+        query: Any,
+        *,
+        limit: int = 10,
+    ) -> list[MemorySearchResult]:
+        ...
+
+    async def clear(
+        self,
+        tier: MemoryTier | None = None,
+        namespace: str | None = None,
+    ) -> None:
+        ...
