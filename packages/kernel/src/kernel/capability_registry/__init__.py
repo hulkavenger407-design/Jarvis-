@@ -1,26 +1,24 @@
 """
-Capability Registry Subsystem (Compatibility Wrapper).
-
-This module is a thin wrapper that re-exports the new `capability_registry` package
-to maintain backward compatibility with obsolete imports.
+Capability Registry Subsystem.
 """
 
-from .capability_registry.errors import (
+from .discovery import StaticCapabilityDiscovery
+from .errors import (
     CapabilityDuplicateError,
     CapabilityNotFoundError,
     CapabilityRegistryError,
     CapabilityValidationError,
     ProviderNotFoundError,
 )
-from .capability_registry.interfaces import ICapability, ILifecycleCapability
-from .capability_registry.models import (
+from .interfaces import ICapability, ILifecycleCapability
+from .models import (
     CapabilityDescriptor,
     CapabilityHandle,
     CapabilityMetadata,
     CapabilityState,
     CapabilityVersion,
 )
-from .capability_registry.registry import CapabilityRegistry, IProviderRegistry
+from .registry import CapabilityRegistry, IProviderRegistry
 
 __all__ = [
     "CapabilityRegistry",
@@ -37,4 +35,5 @@ __all__ = [
     "CapabilityRegistryError",
     "CapabilityValidationError",
     "ProviderNotFoundError",
+    "StaticCapabilityDiscovery",
 ]
