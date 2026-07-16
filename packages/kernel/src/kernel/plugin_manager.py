@@ -12,17 +12,7 @@ from event_bus.bus import EventBus
 from event_bus.models import Event
 from plugin_sdk.base import PluginLoadError, PluginProtocol, PluginState
 
-from .capability_registry import CapabilityDescriptor, CapabilityVersion, CapabilityMetadata, ICapability, CapabilityRegistry
-
-
-class _PluginCapabilityShim(ICapability):
-    def __init__(self, descriptor: CapabilityDescriptor):
-        self._descriptor = descriptor
-
-    @property
-    def descriptor(self) -> CapabilityDescriptor:
-        return self._descriptor
-
+from .capability_registry import Capability, CapabilityRegistry
 from .di import DIContainer
 from .lifecycle import HealthReport, KernelSubsystem
 
@@ -159,22 +149,12 @@ class PluginManager(KernelSubsystem):
         if self._plugin_states.get(name) == PluginState.INITIALIZED:
             plugin = self._plugins[name]
             for cap_name in plugin.metadata.provided_capabilities:
-                version_str = plugin.metadata.version.split(".")
-                major, minor, patch = 1, 0, 0
-                if len(version_str) >= 3:
-                    major, minor, patch = int(version_str[0]), int(version_str[1]), int(version_str[2])
-
-                desc = CapabilityDescriptor(
-                    id=f"{name}.{cap_name}",
+                cap = Capability(
                     name=cap_name,
-                    version=CapabilityVersion(major, minor, patch),
-                    provider_id=name,
-                    interface=type("DummyPluginInterface", (), {}),
-                    metadata=CapabilityMetadata(
-                        description=f"Auto-registered capability from plugin {name}",
-                    )
+                    version=plugin.metadata.version,
+                    provider_name=name,
+                    description=f"Auto-registered capability from plugin {name}",
                 )
-                cap = _PluginCapabilityShim(desc)
                 try:
                     await self._cap_registry.register_capability(cap)
                 except Exception as e:

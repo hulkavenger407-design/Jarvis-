@@ -19,6 +19,7 @@ from .models import (
     CapabilityVersion,
 )
 from .registry import CapabilityRegistry, IProviderRegistry
+from .shim import Capability
 
 __all__ = [
     "CapabilityRegistry",
@@ -36,4 +37,5 @@ __all__ = [
     "CapabilityValidationError",
     "ProviderNotFoundError",
     "StaticCapabilityDiscovery",
+    "Capability",
 ]
