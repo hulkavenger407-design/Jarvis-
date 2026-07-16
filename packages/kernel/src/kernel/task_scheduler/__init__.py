@@ -1,27 +1,15 @@
-"""
-Compatibility wrapper for task_scheduler.
-This module re-exports the refactored task_scheduler package.
-"""
-
-from kernel.task_scheduler import (
-    CronTrigger,
-    DefaultTaskExecutor,
-    InMemoryTaskQueue,
-    IntervalTrigger,
-    OneShotTrigger,
+from .errors import TaskSchedulerError
+from .interfaces import Task, TaskExecutor, TaskQueue, Trigger
+from .models import (
     RetryPolicy,
     ScheduledTask,
-    Task,
     TaskContext,
-    TaskExecutor,
     TaskPriority,
-    TaskQueue,
     TaskResult,
-    TaskScheduler,
-    TaskSchedulerError,
     TaskState,
-    Trigger,
 )
+from .scheduler import DefaultTaskExecutor, InMemoryTaskQueue, TaskScheduler
+from .triggers import CronTrigger, IntervalTrigger, OneShotTrigger
 
 __all__ = [
     "CronTrigger",
