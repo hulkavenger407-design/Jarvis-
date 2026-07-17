@@ -108,3 +108,47 @@ class IMemoryEngine(Protocol):
         namespace: str | None = None,
     ) -> None:
         ...
+
+class IAgentRuntime(Protocol):
+    """Frozen Agent Runtime interface."""
+
+    async def initialize(self) -> None:
+        ...
+
+    async def shutdown(self) -> None:
+        ...
+
+    async def start(self) -> None:
+        ...
+
+    async def stop(self) -> None:
+        ...
+
+    async def execute(
+        self,
+        agent_id: str,
+        capability: str,
+        payload: Any,
+    ) -> Any:
+        ...
+
+    async def register_agent(
+        self,
+        agent: Any,
+    ) -> None:
+        ...
+
+    async def unregister_agent(
+        self,
+        agent_id: str,
+    ) -> None:
+        ...
+
+    async def get_agent(
+        self,
+        agent_id: str,
+    ) -> Any | None:
+        ...
+
+    async def list_agents(self) -> list[Any]:
+        ...

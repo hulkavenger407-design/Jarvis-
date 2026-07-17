@@ -80,7 +80,10 @@ def bus() -> EventBus:
 @pytest.fixture
 async def scheduler(bus: EventBus) -> AsyncGenerator[TaskScheduler, None]:
     di = DIContainer()
-    state = StateManager(bus)
+    from typing import cast
+
+    from kernel.interfaces import IEventBus
+    state = StateManager(cast(IEventBus, bus))
     sch = TaskScheduler(di, bus, state, worker_count=2)
     await sch.initialize()
     await sch.start()
@@ -91,8 +94,12 @@ async def scheduler(bus: EventBus) -> AsyncGenerator[TaskScheduler, None]:
 @pytest.fixture
 async def runtime(bus: EventBus, scheduler: TaskScheduler) -> AsyncGenerator[AgentRuntime, None]:
     di = DIContainer()
-    state = StateManager(bus)
-    cap = CapabilityRegistry(bus)
+    from typing import cast
+
+    from kernel.interfaces import IEventBus
+    state = StateManager(cast(IEventBus, bus))
+    prov = ProviderRegistry()
+    cap = CapabilityRegistry(prov)
     prov = ProviderRegistry()
 
     rt = AgentRuntime(
@@ -108,7 +115,8 @@ async def runtime(bus: EventBus, scheduler: TaskScheduler) -> AsyncGenerator[Age
 @pytest.mark.asyncio
 async def test_agent_registration_and_lifecycle(runtime: AgentRuntime) -> None:
     agent = MockAgent("agent-01", "TestAgent")
-    handle = runtime.register_agent(agent)
+    runtime.register_agent_sync(agent)
+    handle = runtime.get_agent(agent.id)
 
     assert handle.id == "agent-01"
     assert handle.state == AgentState.CREATED
@@ -128,7 +136,7 @@ async def test_agent_registration_and_lifecycle(runtime: AgentRuntime) -> None:
     handle = runtime.get_agent("agent-01")
     assert handle.state == AgentState.IDLE
 
-    await runtime.destroy_agent("agent-01")
+    await runtime.unregister_agent("agent-01")
     assert getattr(agent, "cleaned_up", False) is True
 
     with pytest.raises(AgentRuntimeError):
@@ -138,7 +146,7 @@ async def test_agent_registration_and_lifecycle(runtime: AgentRuntime) -> None:
 @pytest.mark.asyncio
 async def test_agent_execution_success(runtime: AgentRuntime, bus: EventBus) -> None:
     agent = MockAgent("agent-02", "ExecAgent", sleep=0.1)
-    runtime.register_agent(agent)
+    runtime.register_agent_sync(agent)
 
     # Needs to be initialized/idle to run
     handle = runtime.get_agent("agent-02")
@@ -166,7 +174,7 @@ async def test_agent_execution_success(runtime: AgentRuntime, bus: EventBus) -> 
 @pytest.mark.asyncio
 async def test_agent_execution_failure(runtime: AgentRuntime, bus: EventBus) -> None:
     agent = MockAgent("agent-03", "FailAgent", succeed=False, sleep=0.1)
-    runtime.register_agent(agent)
+    runtime.register_agent_sync(agent)
 
     handle = runtime.get_agent("agent-03")
     handle.state = AgentState.IDLE
@@ -190,7 +198,7 @@ async def test_agent_execution_failure(runtime: AgentRuntime, bus: EventBus) -> 
 @pytest.mark.asyncio
 async def test_agent_cancellation(runtime: AgentRuntime) -> None:
     agent = MockAgent("agent-04", "SlowAgent", sleep=0.5)
-    runtime.register_agent(agent)
+    runtime.register_agent_sync(agent)
     handle = runtime.get_agent("agent-04")
     handle.state = AgentState.IDLE
 
@@ -223,13 +231,13 @@ async def test_factory_creation(runtime: AgentRuntime) -> None:
     assert getattr(agent, "initialized", False) is True
 
     # Clean up
-    await runtime.destroy_agent("agent-05")
+    await runtime.unregister_agent("agent-05")
 
 
 @pytest.mark.asyncio
 async def test_restart_recovery(runtime: AgentRuntime) -> None:
     agent = MockAgent("agent-06", "RestartAgent")
-    runtime.register_agent(agent)
+    runtime.register_agent_sync(agent)
     handle = runtime.get_agent("agent-06")
     handle.state = AgentState.FAULTED
     handle.health.is_healthy = False
@@ -251,8 +259,9 @@ async def test_concurrent_execution(runtime: AgentRuntime) -> None:
     for i in range(10):
         aid = f"agent-conc-{i}"
         agent = MockAgent(aid, f"Agent-{i}", sleep=0.05)
-        runtime.register_agent(agent)
-        runtime.get_agent(aid).state = AgentState.IDLE
+        runtime.register_agent_sync(agent)
+        handle = runtime.get_agent(aid)
+        handle.state = AgentState.IDLE
         ids.append(aid)
 
     # Fire them all at once
@@ -272,7 +281,7 @@ async def test_concurrent_execution(runtime: AgentRuntime) -> None:
 async def test_agent_state_persistence(runtime: AgentRuntime) -> None:
     state = runtime._state
     agent = MockAgent("agent-10", "PersistAgent")
-    handle = runtime.register_agent(agent)
+    handle = runtime.register_agent_sync(agent)
     await runtime._transition(handle, AgentState.IDLE)
 
     # Check if state manager saved it
