@@ -1,6 +1,6 @@
-from kernel.agent_runtime.errors import AgentRuntimeError
-from kernel.agent_runtime.interfaces import Agent, AgentExecutor, AgentFactory, AgentRepository
-from kernel.agent_runtime.models import (
+from .errors import AgentRuntimeError
+from .interfaces import Agent, AgentExecutor, AgentFactory, AgentRepository
+from .models import (
     AgentContext,
     AgentExecution,
     AgentHandle,
@@ -10,7 +10,7 @@ from kernel.agent_runtime.models import (
     AgentResult,
     AgentState,
 )
-from kernel.agent_runtime.runtime import AgentRuntime
+from .runtime import AgentRuntime
 
 __all__ = [
     "Agent",
