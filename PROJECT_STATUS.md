@@ -1619,6 +1619,9 @@ class IMemoryEngine(Protocol):
 ## Active Work
 Phase 1 - Subsystem 12: ContextBuilder & Semantic Search (Pending)
 
+## Architecture Audit In Progress
+*   Kernel Interface Specification Draft Created (`KERNEL_INTERFACES_V1.md`). Awaiting review.
+
 ## Next Up
 Phase 1 Implementation: Subsystem 13.
 
