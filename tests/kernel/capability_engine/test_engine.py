@@ -85,7 +85,7 @@ class MockAgentRuntime:
     def __init__(self, allowed_capabilities: list[str]) -> None:
         self.allowed = allowed_capabilities
 
-    def get_agent(self, agent_id: str) -> AgentHandle:
+    async def get_agent(self, agent_id: str) -> AgentHandle:
         ctx = AgentContext(
             agent_id=agent_id,
             metadata={},
@@ -129,7 +129,7 @@ async def engine(bus: EventBus, scheduler: TaskScheduler) -> AsyncGenerator[Capa
     state = StateManager(bus)
     cap = CapabilityRegistry(bus)
     prov = ProviderRegistry()
-    agent_rt = MockAgentRuntime(["test.capability", "test.slow", "test.fail", "test.error"])
+    agent_rt = MockAgentRuntime(["test.capability", "test.slow", "test.fail", "test.error", "test.cap"])
 
     eng = CapabilityEngine(
         di=di,
@@ -298,3 +298,33 @@ async def test_executor_raw_exception(engine: CapabilityEngine) -> None:
     await asyncio.sleep(0.2)
 
     assert engine._metrics.failure_count == 1
+
+@pytest.mark.asyncio
+async def test_icapability_engine_invoke_success(engine: CapabilityEngine):
+    executor = MockExecutor(succeed=True)
+    engine.add_resolver(MockResolver({"test.cap": executor}))
+
+    result = await engine.invoke("test.cap", {"agent_id": "agent-01"}, {"arg1": "val1"})
+    assert result == "success_data"
+    assert executor.executed is True
+
+@pytest.mark.asyncio
+async def test_icapability_engine_invoke_failure(engine: CapabilityEngine):
+    executor = MockExecutor(succeed=False)
+    engine.add_resolver(MockResolver({"test.fail": executor}))
+
+    with pytest.raises(Exception, match="Mock Failure"):
+        await engine.invoke("test.fail", {"agent_id": "agent-01"}, {"arg1": "val1"})
+
+@pytest.mark.asyncio
+async def test_icapability_engine_get_status(engine: CapabilityEngine):
+    executor = MockExecutor(succeed=True)
+    engine.add_resolver(MockResolver({"test.cap": executor}))
+
+    req = CapabilityRequest(capability_name="test.cap", agent_id="agent-01", arguments={})
+    exec_id = await engine.submit(req)
+
+    await asyncio.sleep(0.1)
+
+    status = await engine.get_status(exec_id)
+    assert status == CapabilityExecutionState.COMPLETED.value
