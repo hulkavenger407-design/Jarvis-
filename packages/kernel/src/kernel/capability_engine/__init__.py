@@ -1,10 +1,3 @@
-"""
-Capability Execution Engine Subsystem (Subsystem 11).
-
-This is a thin compatibility wrapper that simply re-exports the implementation
-from the new `kernel.capability_engine` package.
-"""
-
 from kernel.capability_engine.engine import CapabilityEngine
 from kernel.capability_engine.errors import CapabilityExecutionError
 from kernel.capability_engine.execution import (

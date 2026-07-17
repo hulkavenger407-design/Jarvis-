@@ -152,3 +152,18 @@ class IAgentRuntime(Protocol):
 
     async def list_agents(self) -> list[Any]:
         ...
+
+
+class ICapabilityEngine(Protocol):
+    """Frozen Capability Engine interface."""
+
+    async def invoke(
+        self, capability_id: str, security_context: Any, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        ...
+
+    async def cancel(self, execution_id: str) -> None:
+        ...
+
+    async def get_status(self, execution_id: str) -> str:
+        ...
