@@ -95,7 +95,7 @@ No architecture layer violations or circular dependencies were found in the curr
 | Agent Runtime | Exists | 70% | P3 | Implement isolation/sandboxing |
 | Execution Engine | Exists | 70% | P3 | Implement sandboxing and pipeline stages |
 | Infrastructure | Partial | 10% | P4 | Implement OSS adapters, Config, Auth |
-| Knowledge Layer | Missing | 0% | P4 | Not Started |
+| Knowledge Layer | Complete | 100% | P4 | Knowledge Engine, Embeddings, Context Builder implemented |
 | Cognitive Layer | Missing | 0% | P5 | Not Started |
 | Interfaces | Partial | 5% | P6 | Implement gRPC/REST API |
 | Integration Layer | Missing | 0% | P6 | Not Started |
@@ -249,7 +249,7 @@ Architecture 100% Master architecture document frozen; all layers and subsystems
 Documentation 30% Architecture document complete; implementation, user, and developer docs absent
 Kernel 0% Design complete; zero implementation
 Infrastructure 0% Adapter interfaces defined; no code
-Knowledge Layer 0% Design complete; no code
+Knowledge Layer 100% Subsystem 12 complete (interfaces, engine, retrieval, indexing)
 Cognitive Layer 0% Design complete; no code
 Capabilities 0% Design complete; no code
 Interfaces 0% API server, desktop/mobile shells not implemented
